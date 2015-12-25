@@ -14,6 +14,7 @@ INPUT_FILES=${TMP_DIR}/input-files.txt
 INPUT_IGNORE=${TMP_DIR}/input-ignore.txt
 INPUT_INCLUDE=${TMP_DIR}/input-include.txt
 INPUT_EXCLUDE=${TMP_DIR}/input-exclude.txt
+MATCH_INPUT=${TMP_DIR}/match-input.txt
 MATCH_SHASUM=${TMP_DIR}/match-shasum.txt
 MATCH_UPTODATE=${TMP_DIR}/match-uptodate.txt
 MATCH_LOCATION=${TMP_DIR}/match-location.txt
@@ -53,11 +54,10 @@ find $(<${INPUT_INCLUDE}) \
 
 # Match to existing index
 if [ -e ${INPUT_INDEX} ] ; then
-    #todo
-    xzcat ${INPUT_INDEX} > ${MATCH_INDEX}
-    grep ^- ${MATCH_INDEX} | awk -F $'\t' '{print $7 "  " $6}' > ${MATCH_SHASUM}
+    xzcat ${INPUT_INDEX} | grep ^- > ${MATCH_INPUT}
+    awk -F $'\t' '{print $7 "  " $6}' < ${MATCH_INPUT} > ${MATCH_SHASUM}
     sha1sum --check ${MATCH_SHASUM} 2> /dev/null | grep 'OK$' | cut -d ':' -f 1 > ${MATCH_UPTODATE}
-    join -t $'\t' -1 6 -2 1 -o $'1.6\t1.7\t1.8' ${MATCH_INDEX} ${MATCH_UPTODATE} >> ${MATCH_LOCATION}
+    join -t $'\t' -1 6 -2 1 -o $'1.6\t1.7\t1.8' ${MATCH_INPUT} ${MATCH_UPTODATE} >> ${MATCH_LOCATION}
     join -t $'\t' -a 1 -1 6 -2 1 -o $'1.1\t1.2\t1.3\t1.4\t1.5\t1.6\t2.2\t2.3' \
          ${INPUT_FILES} ${MATCH_LOCATION} > ${MATCH_FILES}
 else
