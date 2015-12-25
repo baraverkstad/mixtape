@@ -64,20 +64,19 @@ else
     cd $(dirname ${INPUT_FILES}) ; ln -s $(basename ${INPUT_FILES}) $(basename ${MATCH_FILES})
 fi
 
-# Find files to store
+# Find new/modified files to store
 while IFS=$'\t' read ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
     TYPE=${ACCESS:0:1}
-    if [ ${TYPE} == "-" -a "${LOCATION}" == "" ] ; then
-        if [ ${SIZEKB} -lt 256 ] ; then
+    if [ ${TYPE} == "-" ] ; then
+        if [ "${LOCATION}" != "" ] ; then
+            printf "%s\t%s\t%s\n" "${FILE}" "${SHA}" "${LOCATION}" >> ${STORE_UNSORTED}
+        elif [ ${SIZEKB} -lt 256 ] ; then
             echo ${FILE} >> ${STORE_SMALL}
         else
             echo ${FILE} >> ${STORE_LARGE}
         fi
     fi
 done < ${MATCH_FILES}
-
-# Store symlinks
-grep ^l ${INPUT_FILES} | awk -F $'\t' '{print $6 "\t->\t" $7}' >> ${STORE_UNSORTED}
 
 # Store small files
 if [ -s ${STORE_SMALL} ] ; then
@@ -110,6 +109,9 @@ if [ -s ${STORE_LARGE} ] ; then
         printf "%s\t%s\t%s\n" "${INFILE}" "${SHA}" "${OUTFILE#${DATA_DIR}/}" >> ${STORE_UNSORTED}
     done < ${STORE_LARGE}
 fi
+
+# Add symlinks to store
+grep ^l ${INPUT_FILES} | awk -F $'\t' '{print $6 "\t->\t" $7}' >> ${STORE_UNSORTED}
 
 # Build output index
 if [ -s ${STORE_UNSORTED} ] ; then
