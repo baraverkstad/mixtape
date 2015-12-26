@@ -56,7 +56,7 @@ find $(<${INPUT_INCLUDE}) \
 if [ -e ${INPUT_INDEX} ] ; then
     xzcat ${INPUT_INDEX} | grep ^- > ${MATCH_INPUT}
     awk -F $'\t' '{print $7 "  " $6}' < ${MATCH_INPUT} > ${MATCH_SHASUM}
-    sha1sum --check ${MATCH_SHASUM} 2> /dev/null | grep 'OK$' | cut -d ':' -f 1 > ${MATCH_UPTODATE}
+    shasum --check ${MATCH_SHASUM} 2> /dev/null | grep 'OK$' | cut -d ':' -f 1 > ${MATCH_UPTODATE}
     join -t $'\t' -1 6 -2 1 -o $'1.6\t1.7\t1.8' ${MATCH_INPUT} ${MATCH_UPTODATE} >> ${MATCH_LOCATION}
     join -t $'\t' -a 1 -1 6 -2 1 -o $'1.1\t1.2\t1.3\t1.4\t1.5\t1.6\t2.2\t2.3' \
          ${INPUT_FILES} ${MATCH_LOCATION} > ${MATCH_FILES}
@@ -82,8 +82,8 @@ done < ${MATCH_FILES}
 if [ -s ${STORE_SMALL} ] ; then
     echo "Storing $(wc -l < ${STORE_SMALL}) smaller files..."
     mkdir -p $(dirname ${OUTPUT_TARFILE})
-    tar -caf ${OUTPUT_TARFILE} --absolute-names --files-from ${STORE_SMALL}
-    xargs -L 100 sha1sum < ${STORE_SMALL} >> ${STORE_SHASUM}
+    tar -caf ${OUTPUT_TARFILE} -T ${STORE_SMALL} 2> /dev/null
+    xargs -L 100 shasum < ${STORE_SMALL} >> ${STORE_SHASUM}
     while read SHA FILE ; do
         printf "%s\t%s\t%s\n" "${FILE}" "${SHA}" "${OUTPUT_TARFILE#${DATA_DIR}/}" >> ${STORE_UNSORTED}
     done < ${STORE_SHASUM}
@@ -93,7 +93,7 @@ fi
 if [ -s ${STORE_LARGE} ] ; then
     while read INFILE ; do
         echo "Storing ${INFILE}..."
-        SHA=$(sha1sum ${INFILE} | cut -d ' ' -f 1)
+        SHA=$(shasum ${INFILE} | cut -d ' ' -f 1)
         OUTFILE=${DATA_DIR}/${SHA:1:3}/${SHA:4:3}/$(basename "${INFILE}")
         mkdir -p $(dirname "${OUTFILE}")
         case "${INFILE}" in
