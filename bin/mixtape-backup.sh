@@ -9,7 +9,7 @@ INDEX_DIR=/backup/${HOST}/mixtape/index
 
 DATE_MONTH=$(date '+%Y-%m')
 DATE_MINUTE=$(date '+%Y-%m-%d-%H%M')
-INPUT_INDEX=${INDEX_DIR}/index.latest.txt.xz
+INPUT_INDEX=$(ls ${INDEX_DIR}/index.????-??-??-????.txt.xz 2> /dev/null | tail -1)
 INPUT_FILES=${TMP_DIR}/input-files.txt
 INPUT_IGNORE=${TMP_DIR}/input-ignore.txt
 INPUT_INCLUDE=${TMP_DIR}/input-include.txt
@@ -122,6 +122,6 @@ else
     cp ${MATCH_FILES} ${OUTPUT_INDEX}
 fi
 xz ${OUTPUT_INDEX}
-rm -f ${INPUT_INDEX}
-cd ${INDEX_DIR} ; ln -s $(basename ${OUTPUT_INDEX}).xz $(basename ${INPUT_INDEX})
 
+# Cleanup
+rm -rf ${TMP_DIR}
