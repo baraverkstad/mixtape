@@ -53,7 +53,7 @@ find $(<${INPUT_INCLUDE}) \
      sort --field-separator=$'\t' --key=6 > ${INPUT_FILES}
 
 # Match to existing index
-if [ -e ${INPUT_INDEX} ] ; then
+if [ -e "${INPUT_INDEX}" ] ; then
     xzcat ${INPUT_INDEX} | grep ^- > ${MATCH_INPUT}
     awk -F $'\t' '{print $7 "  " $6}' < ${MATCH_INPUT} > ${MATCH_SHASUM}
     shasum --check ${MATCH_SHASUM} 2> /dev/null | grep 'OK$' | cut -d ':' -f 1 > ${MATCH_UPTODATE}
