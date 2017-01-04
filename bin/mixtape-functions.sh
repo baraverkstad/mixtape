@@ -9,11 +9,20 @@ set -o errtrace
 set -o errexit
 set -o pipefail
 
-# Global variables
-PROCNAME=$(basename ${SCRIPT} .sh)
-PROCID=${PROCNAME}[$$]
+# Process & version variables
+PROGNAME=$(basename $0 .sh)
+PROGID=${PROGNAME}[$$]
 VERSION=0.1
+
+# Flag variables
 VERBOSE=false
+
+# Directory variables
+BACKUP_DIR=/backup
+MIXTAPE_DIR=${BACKUP_DIR}/$(hostname)/mixtape
+MIXTAPE_DATA_DIR=${MIXTAPE_DIR}/data
+MIXTAPE_INDEX_DIR=${MIXTAPE_DIR}/index
+TMP_DIR=/tmp/mixtape-$$
 
 # Color variables
 if [ -t 0 ]; then
@@ -37,25 +46,26 @@ die() {
 # Logs an error to stderr and syslog
 error() {
     echo "${COLOR_ERR}ERROR:${COLOR_RESET}" "$@" >&2
-    logger -p local0.error -t "${PROCID}" "$@" || true
+    logger -p local0.error -t "${PROGID}" "$@" || true
 }
 
 # Logs a warning to stderr and syslog
 warn() {
     echo "${COLOR_WARN}WARNING:${COLOR_RESET}" "$@" >&2
-    logger -p local0.warning -t "${PROCID}" "$@" || true
+    logger -p local0.warning -t "${PROGID}" "$@" || true
 }
 
 # Logs a message to stdout and syslog (no stdout if VERBOSE is false)
 log() {
     ${VERBOSE} && echo $(date +"%F %T"): "$@" || true
-    logger -p local0.info -t "${PROCID}" "$@" || true
+    logger -p local0.info -t "${PROGID}" "$@" || true
 }
 
 versioninfo() {
-    echo "${PROCNAME}, version ${VERSION}"
+    echo "${PROGNAME}, version ${VERSION}"
     exit 1
 }
+
 
 # End with success
 true
