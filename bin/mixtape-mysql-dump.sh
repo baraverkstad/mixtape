@@ -5,16 +5,16 @@
 # Syntax: mixtape-mysql-dump [mysql-options] <database(s)>
 #
 
-# Config
+# Import common functions
+SCRIPT=$(readlink $0 || echo -n $0)
+LIBRARY=$(dirname ${SCRIPT})/mixtape-functions.sh
+source ${LIBRARY} || exit 1
+
+# Global vars
 OPTIONS="--opt --quote-names --skip-add-locks --skip-lock-tables"
+EXTRAS=""
 
-# Set caution flags
-set -o nounset
-set -o errtrace
-set -o errexit
-set -o pipefail
-
-# Function for printing command-line usage info
+# Prints command-line usage info and exits
 usage() {
     echo "Performs a MySQL dump of one or more databases."
     echo
@@ -23,11 +23,13 @@ usage() {
 }
 
 # Parse command-line arguments
-EXTRAS=""
 while [ $# -gt 0 ] ; do
     case "$1" in
     "-?"|"-h"|"--help")
         usage
+        ;;
+    "--version")
+        versioninfo
         ;;
     -*)
         EXTRAS="${EXTRAS} $1"
