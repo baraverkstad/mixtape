@@ -26,15 +26,15 @@ TMP_DIR=/tmp/mixtape-$$
 
 # Color variables
 if [ -t 0 ]; then
-    COLOR_RESET=$(tput sgr0)
     COLOR_OK=$(tput setaf 2)
     COLOR_WARN=$(tput setaf 3)
     COLOR_ERR=$(tput setaf 1; tput bold)
+    COLOR_RESET=$(tput sgr0)
 else
-    COLOR_RESET=""
     COLOR_OK=""
     COLOR_WARN=""
     COLOR_ERR=""
+    COLOR_RESET=""
 fi
 
 # Logs an error and exits (code 1)
