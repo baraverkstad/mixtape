@@ -36,14 +36,16 @@ while [ $# -gt 0 ] ; do
 done
 
 # Print mixtape status
-INDEX_FIRST=$(ls ${MIXTAPE_INDEX_DIR} | head -1)
-INDEX_LAST=$(ls ${MIXTAPE_INDEX_DIR} | tail -1)
+cd ${MIXTAPE_INDEX_DIR}
+INDEX_FILES=(*.xz)
+INDEX_FIRST=${INDEX_FILES[0]}
+INDEX_LAST=${INDEX_FILES[-1]}
 INDEX_SIZE=$(du -h --max-depth=0 ${MIXTAPE_INDEX_DIR} | awk '{print $1}')
 INDEX_COUNT=$(find ${MIXTAPE_INDEX_DIR} -type f | wc -l)
 INDEX_STAT=$(xz --robot --list ${MIXTAPE_INDEX_DIR}/*.xz | tail -1 | \
              awk '{printf  "ratio %.3f, %.2f MB saved\n", $6, ($5-$4)/1048576}')
 SMALL_SIZE=$(du -h --max-depth=0 ${MIXTAPE_DATA_DIR}/files | awk '{print $1}')
-SMALL_COUNT=$(find ${MIXTAPE_DATA_DIR}/files -type f | xargs -L 1 tar -tf | wc -l)
+SMALL_COUNT=$(find ${MIXTAPE_DATA_DIR}/files -type f | xargs -L 1 tar -t --absolute-names -f | wc -l)
 SMALL_STAT=$(xz --robot --list ${MIXTAPE_DATA_DIR}/files/*/*.xz | tail -1 | \
              awk '{printf  "%d archives, ratio %.3f, %.2f MB saved\n", $2, $6, ($5-$4)/1048576}')
 LARGE_SIZE=$(du -h --max-depth=0 --exclude 'files/*' ${MIXTAPE_DATA_DIR} | awk '{print $1}')
