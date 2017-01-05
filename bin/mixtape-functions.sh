@@ -25,7 +25,7 @@ MIXTAPE_INDEX_DIR=${MIXTAPE_DIR}/index
 TMP_DIR=/tmp/mixtape-$$
 
 # Color variables
-if [ -t 0 ]; then
+if [[ -t 0 ]]; then
     COLOR_OK=$(tput setaf 2)
     COLOR_WARN=$(tput setaf 3)
     COLOR_ERR=$(tput setaf 1; tput bold)

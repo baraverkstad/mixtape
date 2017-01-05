@@ -23,12 +23,12 @@ usage() {
 }
 
 # Parse command-line arguments
-while [ $# -gt 0 ] ; do
+while [[ $# -gt 0 ]] ; do
     case "$1" in
-    "-?"|"-h"|"--help")
+    -\?|-h|--help)
         usage
         ;;
-    "--version")
+    --version)
         versioninfo
         ;;
     -*)
@@ -40,10 +40,10 @@ while [ $# -gt 0 ] ; do
         ;;
     esac
 done
-[ $# -gt 0 ] || usage
+[[ $# -gt 0 ]] || usage
 
 # Special Debian/Ubuntu default file location
-if [ -r /etc/mysql/debian.cnf ] ; then
+if [[ -r /etc/mysql/debian.cnf ]] ; then
     OPTIONS="--defaults-extra-file=/etc/mysql/debian.cnf ${OPTIONS}"
 fi
 

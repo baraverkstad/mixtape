@@ -10,8 +10,6 @@ SCRIPT=$(readlink $0 || echo -n $0)
 LIBRARY=$(dirname ${SCRIPT})/mixtape-functions.sh
 source ${LIBRARY} || exit 1
 
-# Global vars
-
 # Prints command-line usage info and exits
 usage() {
     echo "Prints a backup status summary."
@@ -21,12 +19,12 @@ usage() {
 }
 
 # Parse command-line arguments
-while [ $# -gt 0 ] ; do
+while [[ $# -gt 0 ]] ; do
     case "$1" in
-    "-?"|"-h"|"--help")
+    -\?|-h|--help)
         usage
         ;;
-    "--version")
+    --version)
         versioninfo
         ;;
     *)

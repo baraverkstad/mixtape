@@ -37,10 +37,10 @@ mkdir -p ${TMP_DIR} ${INDEX_DIR} ${DATA_DIR}
 echo '.git .hg .svn' > ${INPUT_IGNORE}
 touch ${INPIT_INCLUDE} ${INPUT_EXCLUDE}
 while read RULE ; do
-    [ "${RULE}" != "" -a "${RULE:0:1}" != "#" ] || continue
-    if [ "${RULE:0:1}" == "-" ] ; then
+    [[ "${RULE}" != "" && "${RULE:0:1}" != "#" ]] || continue
+    if [[ "${RULE:0:1}" == "-" ]] ; then
         echo ${RULE:1} >> ${INPUT_EXCLUDE}
-    elif [ "${SRC:0:1}" == "+" ] ; then
+    elif [[ "${SRC:0:1}" == "+" ]] ; then
         echo ${RULE:1} >> ${INPUT_INCLUDE}
     else
         echo ${RULE} >> ${INPUT_INCLUDE}
@@ -53,7 +53,7 @@ find $(<${INPUT_INCLUDE}) \
      sort --field-separator=$'\t' --key=6 > ${INPUT_FILES}
 
 # Match to existing index
-if [ -e "${INPUT_INDEX}" ] ; then
+if [[ -e "${INPUT_INDEX}" ]] ; then
     xzcat ${INPUT_INDEX} | grep ^- > ${MATCH_INPUT}
     awk -F $'\t' '{print $7 "  " $6}' < ${MATCH_INPUT} > ${MATCH_SHASUM}
     shasum --check ${MATCH_SHASUM} 2> /dev/null | grep 'OK$' | cut -d ':' -f 1 > ${MATCH_UPTODATE}
@@ -67,10 +67,10 @@ fi
 # Find new/modified files to store
 while IFS=$'\t' read ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
     TYPE=${ACCESS:0:1}
-    if [ ${TYPE} == "-" ] ; then
-        if [ "${LOCATION}" != "" ] ; then
+    if [[ ${TYPE} == "-" ]] ; then
+        if [[ "${LOCATION}" != "" ]] ; then
             printf "%s\t%s\t%s\n" "${FILE}" "${SHA}" "${LOCATION}" >> ${STORE_UNSORTED}
-        elif [ ${SIZEKB} -lt 256 ] ; then
+        elif [[ ${SIZEKB} -lt 256 ]] ; then
             echo ${FILE} >> ${STORE_SMALL}
         else
             echo ${FILE} >> ${STORE_LARGE}
@@ -79,7 +79,7 @@ while IFS=$'\t' read ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
 done < ${MATCH_FILES}
 
 # Store small files
-if [ -s ${STORE_SMALL} ] ; then
+if [[ -s ${STORE_SMALL} ]] ; then
     echo "Storing $(wc -l < ${STORE_SMALL}) smaller files..."
     mkdir -p $(dirname ${OUTPUT_TARFILE})
     tar -caf ${OUTPUT_TARFILE} -T ${STORE_SMALL} 2> /dev/null
@@ -90,7 +90,7 @@ if [ -s ${STORE_SMALL} ] ; then
 fi
 
 # Store large files
-if [ -s ${STORE_LARGE} ] ; then
+if [[ -s ${STORE_LARGE} ]] ; then
     while read INFILE ; do
         echo "Storing ${INFILE}..."
         SHA=$(shasum ${INFILE} | cut -d ' ' -f 1)
@@ -114,7 +114,7 @@ fi
 grep ^l ${INPUT_FILES} | awk -F $'\t' '{print $6 "\t->\t" $7}' >> ${STORE_UNSORTED}
 
 # Build output index
-if [ -s ${STORE_UNSORTED} ] ; then
+if [[ -s ${STORE_UNSORTED} ]] ; then
     sort --field-separator=$'\t' --key=6 ${STORE_UNSORTED} > ${STORE_SORTED}
     join -t $'\t' -a 1 -1 6 -2 1 -o $'1.1\t1.2\t1.3\t1.4\t1.5\t1.6\t2.2\t2.3' \
          ${MATCH_FILES} ${STORE_SORTED} > ${OUTPUT_INDEX}
