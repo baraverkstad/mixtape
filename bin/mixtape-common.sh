@@ -95,6 +95,30 @@ index_epoch() {
     printf "@%x" $(date --date="${DATETIME}" +"%s")
 }
 
+# Prints matching (and existing) index files
+index_list() {
+    local MATCH=$1 GLOB FILES POS
+    if [[ ${MATCH:0:1} = "@" ]] ; then
+        GLOB=$(date --date=@$((16#${MATCH:1})) +'%Y-%m-%d-%H%M')
+    elif [[ ${MATCH} = "first" ]] ; then
+        GLOB="*"
+        POS=0
+    elif [[ ${MATCH} = "last" ]] ; then
+        GLOB="*"
+        POS=-1
+    elif [[ -n ${MATCH} ]] ; then
+        GLOB=$(echo -n \*${MATCH}\* | tr ' ' '-' | tr -d ':')
+    else
+        GLOB="*"
+    fi
+    FILES=(${MIXTAPE_INDEX_DIR}/index.${GLOB}.txt.xz)
+    if [[ -z ${POS:-} && -e ${FILES[0]} ]] ; then
+        echo -n ${FILES[@]}
+    elif [[ -n ${POS:-} && -e ${FILES[${POS}]} ]] ; then
+        echo -n ${FILES[${POS}]}
+    fi
+}
+
 # Prints contents of an index (optionally filtered by a grep regex)
 index_content() {
     local INDEX=$1 MATCH=$2 PREFIX FILTER
