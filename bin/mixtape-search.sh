@@ -75,7 +75,7 @@ print_index_entries() {
     done
 }
 
-# Main function
+# Program start
 main() {
     parseargs "$@"
     for FILE in $(matching_files "${PATTERN}") ; do

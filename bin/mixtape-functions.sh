@@ -61,11 +61,25 @@ log() {
     logger -p local0.info -t "${PROGID}" "$@" || true
 }
 
+# Prints program name and version, then exits
 versioninfo() {
     echo "${PROGNAME}, version ${VERSION}"
     exit 1
 }
 
+# Prints datetime of an index file
+index_datetime() {
+    local FILE=$1
+    local NAME=${FILE##*/}
+    echo -n "${NAME:6:10} ${NAME:17:2}:${NAME:19:2}"
+}
+
+# Prints hex epoch of an index file
+index_epoch() {
+    local FILE=$1
+    local DATETIME=$(index_datetime ${FILE})
+    printf "@%x" $(date --date="${DATETIME}" +"%s")
+}
 
 # End with success
 true
