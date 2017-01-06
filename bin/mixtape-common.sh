@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Library functions used by other scripts
+# Common variables and functions used by other scripts
 #
 
 # Set caution flags

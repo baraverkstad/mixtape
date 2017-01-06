@@ -7,7 +7,7 @@
 
 # Import common functions
 SCRIPT=$(readlink $0 || echo -n $0)
-LIBRARY=$(dirname ${SCRIPT})/mixtape-functions.sh
+LIBRARY=$(dirname ${SCRIPT})/mixtape-common.sh
 source ${LIBRARY} || exit 1
 
 # Prints command-line usage info and exits
