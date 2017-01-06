@@ -82,7 +82,7 @@ index_epoch() {
 }
 
 # Prints contents of an index (optionally filtered by a grep regex)
-index_list() {
+index_content() {
     local INDEX=$1 MATCH=$2 PREFIX FILTER
     PREFIX=$(index_epoch ${INDEX})
     if [[ -z ${MATCH} ]] ; then
@@ -91,6 +91,14 @@ index_list() {
         FILTER=$'\t'"${MATCH}"$'\t'
     fi
     xzcat ${INDEX} | grep "${FILTER}" | sed -e "s/^/${PREFIX}\t/" || true
+}
+
+# Prints contents for all indices (optionally filtered by a grep regex)
+index_all_content() {
+    local MATCH=$1 INDEX
+    for INDEX in ${MIXTAPE_INDEX_DIR}/*.xz ; do
+        index_content ${INDEX} "${MATCH}"
+    done
 }
 
 # End with success

@@ -2,7 +2,7 @@
 #
 # Searches for matching files in the backup.
 #
-# Syntax: mixtape-search <pattern>
+# Syntax: mixtape-search [--all] <pattern>
 #
 
 # Import common functions
@@ -12,12 +12,17 @@ source ${LIBRARY} || exit 1
 
 # Global vars
 PATTERN=""
+ALL=false
+INDEX_LAST=$(ls ${MIXTAPE_INDEX_DIR}/*.xz | tail -1)
 
 # Prints command-line usage info and exits
 usage() {
     echo "Searches for matching files in the backup."
     echo
-    echo "Syntax: mixtape-search <pattern>"
+    echo "Syntax: mixtape-search [--all] <pattern>"
+    echo
+    echo "Options:"
+    echo "  --all            Print all matching backups (not only first)"
     exit 1
 }
 
@@ -30,6 +35,10 @@ parseargs() {
             ;;
         --version)
             versioninfo
+            ;;
+        --all)
+            ALL=true
+            shift
             ;;
         --)
             shift
@@ -51,14 +60,6 @@ parseargs() {
 index_search_pattern() {
     local PATTERN=$1
     xzcat ${MIXTAPE_INDEX_DIR}/*.xz | cut -f 6 | grep -i -- "${PATTERN}" | sort | uniq
-}
-
-# Prints all index entries for a file
-index_list_all_by_file() {
-    local FILE=$1 INDEX PREFIX
-    for INDEX in ${MIXTAPE_INDEX_DIR}/*.xz ; do
-        index_list ${INDEX} ${FILE}
-    done
 }
 
 # Reads index entries from stdin and prints them
@@ -83,20 +84,25 @@ index_print() {
 file_modified() {
     local FILE=$1 LAST CURRENT INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION
     if [[ -r ${FILE} ]] ; then
-        LAST=$(ls ${MIXTAPE_INDEX_DIR}/*.xz | tail -1)
         CURRENT=$(shasum ${FILE} | cut -d ' ' -f 1)
         while IFS=$'\t' read INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
             if [[ ${ACCESS:0:1} != "-" || ${CURRENT} == ${SHA} ]] ; then
                 return 1 # false
             fi
-        done < <(index_list ${LAST} ${FILE})
+        done < <(index_content ${INDEX_LAST} ${FILE})
     fi
     return 0 # true
 }
 
 # Program start
 main() {
+    local FILE FILTER
     parseargs "$@"
+    if $ALL ; then
+        FILTER="cat"
+    else
+        FILTER="uniq -f 1"
+    fi
     for FILE in $(index_search_pattern "${PATTERN}") ; do
         echo -n "${COLOR_WARN}${FILE}"
         if [[ ! -e ${FILE} ]] ; then
@@ -105,7 +111,7 @@ main() {
             echo -n " ${COLOR_ERR}[modified]"
         fi
         echo "${COLOR_RESET}"
-        index_list_all_by_file ${FILE} | uniq -f 1 | index_print
+        index_all_content ${FILE} | ${FILTER} | index_print
         echo
     done
 }
