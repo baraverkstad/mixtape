@@ -47,20 +47,24 @@ parseargs() {
     PATTERN="$*"
 }
 
-# Prints matching files
-matching_files() {
-    xzcat ${MIXTAPE_INDEX_DIR}/*.xz | cut -f 6 | grep -i -- "$@" | sort | uniq
+# Prints files from all indices matching a pattern
+index_search_pattern() {
+    local PATTERN=$1
+    xzcat ${MIXTAPE_INDEX_DIR}/*.xz | cut -f 6 | grep -i -- "${PATTERN}" | sort | uniq
 }
 
-# Prints all unique index entries for a file
-index_entries() {
-    FILE="$1"
-    xzcat ${MIXTAPE_INDEX_DIR}/*.xz | grep $'\t'"${FILE}"$'\t' | uniq
+# Prints all index entries for a file
+index_list_all_by_file() {
+    local FILE=$1 INDEX PREFIX
+    for INDEX in ${MIXTAPE_INDEX_DIR}/*.xz ; do
+        index_list ${INDEX} ${FILE}
+    done
 }
 
 # Reads index entries from stdin and prints them
-print_index_entries() {
-    while IFS=$'\t' read ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
+index_print() {
+    local INDEX ACCESS USER GROUP DATETIME SIZEKB SIZEMB FILE SHA LOCATION EXTRA
+    while IFS=$'\t' read INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
         if [[ -z ${SHA} ]] ; then
             EXTRA=""
         elif [[ ${SHA} = "->" ]] ; then
@@ -71,18 +75,18 @@ print_index_entries() {
         else
             EXTRA="${SIZEKB}K  ${SHA}"
         fi
-        printf "%s  %s %s  %s  %s\n" ${ACCESS} ${USER} ${GROUP} "${DATETIME}" "${EXTRA}"
+        printf "%s: %s  %s %s  %s  %s\n" ${INDEX} ${ACCESS} ${USER} ${GROUP} "${DATETIME}" "${EXTRA}"
     done
 }
 
 # Program start
 main() {
     parseargs "$@"
-    for FILE in $(matching_files "${PATTERN}") ; do
+    for FILE in $(index_search_pattern "${PATTERN}") ; do
         echo -n "${COLOR_WARN}${FILE}"
         [[ -e ${FILE} ]] || echo -n " ${COLOR_ERR}[deleted]"
         echo "${COLOR_RESET}"
-        index_entries ${FILE} | print_index_entries
+        index_list_all_by_file ${FILE} | uniq -f 1 | index_print
         echo
     done
 }

@@ -69,16 +69,28 @@ versioninfo() {
 
 # Prints datetime of an index file
 index_datetime() {
-    local FILE=$1
-    local NAME=${FILE##*/}
+    local INDEX=$1 NAME
+    NAME=${INDEX##*/}
     echo -n "${NAME:6:10} ${NAME:17:2}:${NAME:19:2}"
 }
 
 # Prints hex epoch of an index file
 index_epoch() {
-    local FILE=$1
-    local DATETIME=$(index_datetime ${FILE})
+    local INDEX=$1 DATETIME
+    DATETIME=$(index_datetime ${INDEX})
     printf "@%x" $(date --date="${DATETIME}" +"%s")
+}
+
+# Prints contents of an index (optionally filtered by a grep regex)
+index_list() {
+    local INDEX=$1 MATCH=$2 PREFIX FILTER
+    PREFIX=$(index_epoch ${INDEX})
+    if [[ -z ${MATCH} ]] ; then
+        FILTER="^"
+    else
+        FILTER=$'\t'"${MATCH}"$'\t'
+    fi
+    xzcat ${INDEX} | grep "${FILTER}" | sed -e "s/^/${PREFIX}\t/" || true
 }
 
 # End with success
