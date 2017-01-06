@@ -79,12 +79,31 @@ index_print() {
     done
 }
 
+# Checks if a file has been modified vs last index
+file_modified() {
+    local FILE=$1 LAST CURRENT INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION
+    if [[ -r ${FILE} ]] ; then
+        LAST=$(ls ${MIXTAPE_INDEX_DIR}/*.xz | tail -1)
+        CURRENT=$(shasum ${FILE} | cut -d ' ' -f 1)
+        while IFS=$'\t' read INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
+            if [[ ${ACCESS:0:1} != "-" || ${CURRENT} == ${SHA} ]] ; then
+                return 1 # false
+            fi
+        done < <(index_list ${LAST} ${FILE})
+    fi
+    return 0 # true
+}
+
 # Program start
 main() {
     parseargs "$@"
     for FILE in $(index_search_pattern "${PATTERN}") ; do
         echo -n "${COLOR_WARN}${FILE}"
-        [[ -e ${FILE} ]] || echo -n " ${COLOR_ERR}[deleted]"
+        if [[ ! -e ${FILE} ]] ; then
+            echo -n " ${COLOR_ERR}[deleted]"
+        elif file_modified ${FILE} ; then
+            echo -n " ${COLOR_ERR}[modified]"
+        fi
         echo "${COLOR_RESET}"
         index_list_all_by_file ${FILE} | uniq -f 1 | index_print
         echo
