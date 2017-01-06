@@ -28,7 +28,7 @@ parseargs() {
 
 # Print mixtape status
 print_mixtape_status() {
-    echo "--- Statistics for ${MIXTAPE_DIR}: ---"
+    echo "${COLOR_WARN}--- Statistics for ${MIXTAPE_DIR}: ---${COLOR_RESET}"
     cd ${MIXTAPE_INDEX_DIR}
     local INDEX_FILES=(*.xz)
     echo -n "Date range:     "
@@ -47,7 +47,7 @@ print_mixtape_status() {
         awk '{printf  "ratio %.3f, %.2f MB saved\n", $6, ($5-$4)/1048576}'
     echo -n "Small files:    "
     du -h --max-depth=0 ${MIXTAPE_DATA_DIR}/files | awk '{printf "%s, ",$1}'
-    find ${MIXTAPE_DATA_DIR}/files -type f | xargs -L 1 tar -t --absolute-names -f | \
+    find ${MIXTAPE_DATA_DIR}/files -type f | xargs -n 1 tar -t --absolute-names -f | \
         wc -l | awk '{printf "%s files, ",$1}'
     xz --robot --list ${MIXTAPE_DATA_DIR}/files/*/*.xz | tail -1 | \
         awk '{printf  "%d archives, ratio %.3f, %.2f MB saved\n", $2, $6, ($5-$4)/1048576}'
@@ -61,7 +61,7 @@ print_mixtape_status() {
 
 # Print backup dir and filesystem summary
 print_disk_usage() {
-    echo "--- Disk Usage: ---"
+    echo "${COLOR_WARN}--- Disk Usage: ---${COLOR_RESET}"
     du -h --max-depth=1 --time ${BACKUP_DIR}
     echo
     df -h ${BACKUP_DIR}
