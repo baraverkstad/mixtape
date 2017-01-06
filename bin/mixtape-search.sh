@@ -74,14 +74,12 @@ index_print() {
 # Checks if a file has been modified vs last index
 file_modified() {
     local FILE=$1 LAST CURRENT INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION
-    if [[ -r ${FILE} ]] ; then
-        CURRENT=$(shasum ${FILE} | cut -d ' ' -f 1)
-        while IFS=$'\t' read INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
-            if [[ ${ACCESS:0:1} != "-" || ${CURRENT} == ${SHA} ]] ; then
-                return 1 # false
-            fi
-        done < <(index_content ${INDEX_LAST} ${FILE})
-    fi
+    CURRENT=$(shasum ${FILE} 2>/dev/null | cut -d ' ' -f 1)
+    while IFS=$'\t' read INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
+        if [[ ${ACCESS:0:1} != "-" || ${CURRENT} == ${SHA} ]] ; then
+            return 1 # false
+        fi
+    done < <(index_content ${INDEX_LAST} ${FILE})
     return 0 # true
 }
 
