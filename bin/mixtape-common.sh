@@ -11,6 +11,7 @@ set -o pipefail
 
 # Process & version variables
 PROGNAME=$(basename $0 .sh)
+PROGSRC=$0
 PROGID=${PROGNAME}[$$]
 VERSION=0.1
 
@@ -59,6 +60,19 @@ warn() {
 log() {
     ${VERBOSE} && echo $(date +"%F %T"): "$@" || true
     logger -p local0.info -t "${PROGID}" "$@" || true
+}
+
+# Prints command-line usage info and exits
+usage() {
+    local LINE
+    while read LINE ; do
+        if [[ ${LINE:0:1} = "#" ]] ; then
+            echo "${LINE:2}"
+        else
+            break
+        fi
+    done < <(tail -n +3 $PROGSRC)
+    exit 1
 }
 
 # Prints program name and version, then exits

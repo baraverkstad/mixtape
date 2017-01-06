@@ -3,20 +3,11 @@
 # Prints a backup status summary.
 #
 # Syntax: mixtape-status
-#
 
 # Import common functions
 SCRIPT=$(readlink $0 || echo -n $0)
 LIBRARY=$(dirname ${SCRIPT})/mixtape-common.sh
 source ${LIBRARY} || exit 1
-
-# Prints command-line usage info and exits
-usage() {
-    echo "Prints a backup status summary."
-    echo
-    echo "Syntax: mixtape-status"
-    exit 1
-}
 
 # Parse command-line arguments
 parseargs() {

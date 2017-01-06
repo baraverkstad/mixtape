@@ -4,6 +4,8 @@
 #
 # Syntax: mixtape-search [--all] <pattern>
 #
+# Options:
+#   --all            Print all matching backups (not only first)
 
 # Import common functions
 SCRIPT=$(readlink $0 || echo -n $0)
@@ -14,17 +16,6 @@ source ${LIBRARY} || exit 1
 PATTERN=""
 ALL=false
 INDEX_LAST=$(ls ${MIXTAPE_INDEX_DIR}/*.xz | tail -1)
-
-# Prints command-line usage info and exits
-usage() {
-    echo "Searches for matching files in the backup."
-    echo
-    echo "Syntax: mixtape-search [--all] <pattern>"
-    echo
-    echo "Options:"
-    echo "  --all            Print all matching backups (not only first)"
-    exit 1
-}
 
 # Parse command-line arguments
 parseargs() {
