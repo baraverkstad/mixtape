@@ -28,9 +28,15 @@ parseargs() {
 
 # Print mixtape status
 print_mixtape_status() {
-    echo "${COLOR_WARN}--- Statistics for ${MIXTAPE_DIR}: ---${COLOR_RESET}"
-    cd ${MIXTAPE_INDEX_DIR}
+    local DIR=$1
+    echo "${COLOR_WARN}--- Statistics for ${DIR}: ---${COLOR_RESET}"
+    cd ${DIR}/index
     local INDEX_FILES=(*.xz)
+    if [[ ! -e ${INDEX_FILES[0]} ]] ; then
+        echo "No index files in ${DIR}/index/"
+        echo
+        return
+    fi
     echo -n "Date range:     "
     index_datetime ${INDEX_FILES[0]}
     echo -n " ("
@@ -41,37 +47,42 @@ print_mixtape_status() {
     index_epoch ${INDEX_FILES[-1]}
     echo ")"
     echo -n "Indices:        "
-    du -h --max-depth=0 ${MIXTAPE_INDEX_DIR} | awk '{printf "%s",$1}'
+    du -h --max-depth=0 ${DIR}/index | awk '{printf "%s",$1}'
     echo -n ", ${#INDEX_FILES[@]} files, "
-    xz --robot --list ${MIXTAPE_INDEX_DIR}/*.xz | tail -1 | \
+    xz --robot --list ${DIR}/index/*.xz | tail -1 | \
         awk '{printf  "ratio %.3f, %.2f MB saved\n", $6, ($5-$4)/1048576}'
     echo -n "Small files:    "
-    du -h --max-depth=0 ${MIXTAPE_DATA_DIR}/files | awk '{printf "%s, ",$1}'
-    find ${MIXTAPE_DATA_DIR}/files -type f | xargs -n 1 tar -t --absolute-names -f | \
+    du -h --max-depth=0 ${DIR}/data/files | awk '{printf "%s, ",$1}'
+    find ${DIR}/data/files -type f | xargs -n 1 tar -t --absolute-names -f | \
         wc -l | awk '{printf "%s files, ",$1}'
-    xz --robot --list ${MIXTAPE_DATA_DIR}/files/*/*.xz | tail -1 | \
+    xz --robot --list ${DIR}/data/files/*/*.xz | tail -1 | \
         awk '{printf  "%d archives, ratio %.3f, %.2f MB saved\n", $2, $6, ($5-$4)/1048576}'
     echo -n "Large files:    "
-    du -h --max-depth=0 --exclude 'files/*' ${MIXTAPE_DATA_DIR} | awk '{printf "%s, ",$1}'
-    find ${MIXTAPE_DATA_DIR}/???/ -type f | wc -l | awk '{printf "%s files, ",$1}'
-    xz --robot --list ${MIXTAPE_DATA_DIR}/???/???/*.xz | tail -1 | \
+    du -h --max-depth=0 --exclude 'files/*' ${DIR}/data | awk '{printf "%s, ",$1}'
+    find ${DIR}/data/???/ -type f | wc -l | awk '{printf "%s files, ",$1}'
+    xz --robot --list ${DIR}/data/???/???/*.xz | tail -1 | \
         awk '{printf  "%d compressed, ratio %.3f, %.2f MB saved\n", $2, $6, ($5-$4)/1048576}'
     echo
 }
 
 # Print backup dir and filesystem summary
 print_disk_usage() {
+    local DIR=$1
     echo "${COLOR_WARN}--- Disk Usage: ---${COLOR_RESET}"
-    du -h --max-depth=1 --time ${BACKUP_DIR}
+    du -h --max-depth=1 --time ${DIR}
     echo
-    df -h ${BACKUP_DIR}
+    df -h ${DIR}
 }
 
 # Program start
 main() {
     parseargs "$@"
-    print_mixtape_status
-    print_disk_usage
+    for DIR in ${BACKUP_DIR}/*/mixtape ; do
+        if is_mixtape_dir ${DIR} ; then
+            print_mixtape_status ${DIR}
+        fi
+    done
+    print_disk_usage ${BACKUP_DIR}
 }
 
 main "$@"
