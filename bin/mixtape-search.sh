@@ -4,8 +4,12 @@
 #
 # Syntax: mixtape-search [--all] <pattern>
 #
+# Arguments:
+#   <pattern>        A grep (regex) search pattern (i.e. '.*' for any char)
+#
 # Options:
 #   --all            Print all matching backups (not only first)
+#
 
 # Import common functions
 SCRIPT=$(readlink $0 || echo -n $0)
@@ -13,39 +17,7 @@ LIBRARY=$(dirname ${SCRIPT})/mixtape-common.sh
 source ${LIBRARY} || exit 1
 
 # Global vars
-PATTERN=""
-ALL=false
 INDEX_LAST=$(ls ${MIXTAPE_INDEX_DIR}/*.xz | tail -1)
-
-# Parse command-line arguments
-parseargs() {
-    while [[ $# -gt 0 ]] ; do
-        case "$1" in
-        -\?|-h|--help)
-            usage
-            ;;
-        --version)
-            versioninfo
-            ;;
-        --all)
-            ALL=true
-            shift
-            ;;
-        --)
-            shift
-            break
-            ;;
-        -*)
-            usage
-            ;;
-        *)
-            break
-            ;;
-        esac
-    done
-    [[ $# -gt 0 ]] || usage
-    PATTERN="$*"
-}
 
 # Prints files from all indices matching a pattern
 index_search_pattern() {
@@ -85,13 +57,20 @@ file_modified() {
 
 # Program start
 main() {
-    local FILE FILTER
-    parseargs "$@"
-    if $ALL ; then
-        FILTER="cat"
-    else
-        FILTER="uniq -f 1"
-    fi
+    local PATTERN FILTER OPT FILE
+    [[ ${#PROGARGS[@]} -gt 0 ]] || usage
+    PATTERN="${PROGARGS[@]}"
+    FILTER="uniq -f 1"
+    for OPT in ${PROGOPTS+"${PROGOPTS[@]:-}"} ; do
+        case "${OPT}" in
+        --all)
+            FILTER="cat"
+            ;;
+        *)
+            usage
+            ;;
+        esac
+    done
     for FILE in $(index_search_pattern "${PATTERN}") ; do
         echo -n "${COLOR_WARN}${FILE}"
         if [[ ! -e ${FILE} ]] ; then
@@ -105,4 +84,4 @@ main() {
     done
 }
 
-main "$@"
+main

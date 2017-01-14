@@ -15,7 +15,9 @@ PROGSRC=$0
 PROGID=${PROGNAME}[$$]
 VERSION=0.2
 
-# Flag variables
+# Command-line parsing result variables
+PROGARGS=()
+PROGOPTS=()
 VERBOSE=false
 
 # Directory variables
@@ -148,6 +150,31 @@ index_all_content() {
         index_content ${INDEX} "${MATCH}"
     done
 }
+
+# Parse command-line arguments
+while [[ $# -gt 0 ]] ; do
+    case "$1" in
+    -\?|-h|--help)
+        usage
+        ;;
+    --version)
+        versioninfo
+        ;;
+    --)
+        shift
+        PROGARGS+=("$@")
+        break
+        ;;
+    -*)
+        PROGOPTS+=("$1")
+        shift
+        ;;
+    *)
+        PROGARGS+=("$1")
+        shift
+        ;;
+    esac
+done
 
 # End with success
 true

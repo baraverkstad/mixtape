@@ -3,28 +3,12 @@
 # Prints a backup status summary.
 #
 # Syntax: mixtape-status
+#
 
 # Import common functions
 SCRIPT=$(readlink $0 || echo -n $0)
 LIBRARY=$(dirname ${SCRIPT})/mixtape-common.sh
 source ${LIBRARY} || exit 1
-
-# Parse command-line arguments
-parseargs() {
-    while [[ $# -gt 0 ]] ; do
-        case "$1" in
-        -\?|-h|--help)
-            usage
-            ;;
-        --version)
-            versioninfo
-            ;;
-        *)
-            usage
-            ;;
-        esac
-    done
-}
 
 # Print mixtape status
 print_mixtape_status() {
@@ -76,7 +60,8 @@ print_disk_usage() {
 
 # Program start
 main() {
-    parseargs "$@"
+    [[ ${#PROGARGS[@]} -eq 0 ]] || usage
+    [[ ${#PROGOPTS[@]} -eq 0 ]] || usage
     for DIR in ${BACKUP_DIR}/*/mixtape ; do
         if is_mixtape_dir ${DIR} ; then
             print_mixtape_status ${DIR}
@@ -85,4 +70,4 @@ main() {
     print_disk_usage ${BACKUP_DIR}
 }
 
-main "$@"
+main
