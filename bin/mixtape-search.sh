@@ -17,12 +17,12 @@ LIBRARY=$(dirname ${SCRIPT})/mixtape-common.sh
 source ${LIBRARY} || exit 1
 
 # Global vars
-INDEX_LAST=$(ls ${MIXTAPE_INDEX_DIR}/*.xz | tail -1)
+INDEX_LAST=$(ls ${MIXTAPE_DIR}/index/*.xz | tail -1)
 
 # Prints files from all indices matching a pattern
 index_search_pattern() {
     local PATTERN=$1
-    xzcat ${MIXTAPE_INDEX_DIR}/*.xz | cut -f 6 | grep -i -- "${PATTERN}" | sort | uniq
+    xzcat ${MIXTAPE_DIR}/index/*.xz | cut -f 6 | grep -i -- "${PATTERN}" | sort | uniq
 }
 
 # Reads index entries from stdin and prints them
@@ -79,7 +79,7 @@ main() {
             echo -n " ${COLOR_ERR}[modified]"
         fi
         echo "${COLOR_RESET}"
-        index_all_content ${FILE} | ${FILTER} | index_print
+        index_all_content "${MIXTAPE_DIR}" "${FILE}" | ${FILTER} | index_print
         echo
     done
 }

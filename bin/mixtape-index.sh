@@ -25,7 +25,7 @@ main() {
         SEARCH="${PROGARGS[@]}"
     fi
     [[ ${#PROGOPTS[@]} -eq 0 ]] || usage
-    for INDEX in $(index_list "${SEARCH}") ; do
+    for INDEX in $(index_list "${MIXTAPE_DIR}" "${SEARCH}") ; do
         echo -n "${COLOR_WARN}$(index_epoch ${INDEX})${COLOR_RESET}: ${INDEX}"
         xzcat ${INDEX} | wc -l | awk '{printf " (%s entries",$1}'
         du -h ${INDEX} | awk '{printf ", %s)\n",$1}'

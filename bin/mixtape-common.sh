@@ -23,8 +23,6 @@ VERBOSE=false
 # Directory variables
 BACKUP_DIR=/backup
 MIXTAPE_DIR=${BACKUP_DIR}/$(hostname)/mixtape
-MIXTAPE_DATA_DIR=${MIXTAPE_DIR}/data
-MIXTAPE_INDEX_DIR=${MIXTAPE_DIR}/index
 TMP_DIR=/tmp/mixtape-$$
 
 # Color variables
@@ -107,9 +105,9 @@ index_epoch() {
     printf "@%x" $(date --date="${DATETIME}" +"%s")
 }
 
-# Prints matching (and existing) index files
+# Prints matching (and existing) index files for a backup dir
 index_list() {
-    local MATCH=$1 GLOB FILES POS
+    local DIR="$1" MATCH="$2" GLOB FILES POS
     if [[ ${MATCH:0:1} = "@" ]] ; then
         GLOB=$(date --date=@$((16#${MATCH:1})) +'%Y-%m-%d-%H%M')
     elif [[ ${MATCH} = "first" ]] ; then
@@ -123,7 +121,7 @@ index_list() {
     else
         GLOB="*"
     fi
-    FILES=(${MIXTAPE_INDEX_DIR}/index.${GLOB}.txt.xz)
+    FILES=(${DIR}/index/index.${GLOB}.txt.xz)
     if [[ -z ${POS:-} && -e ${FILES[0]} ]] ; then
         echo -n ${FILES[@]}
     elif [[ -n ${POS:-} && -e ${FILES[${POS}]} ]] ; then
@@ -145,8 +143,8 @@ index_content() {
 
 # Prints contents for all indices (optionally filtered by a grep regex)
 index_all_content() {
-    local MATCH=$1 INDEX
-    for INDEX in ${MIXTAPE_INDEX_DIR}/*.xz ; do
+    local DIR="$1" MATCH=$2 INDEX
+    for INDEX in ${DIR}/index/*.xz ; do
         index_content ${INDEX} "${MATCH}"
     done
 }
