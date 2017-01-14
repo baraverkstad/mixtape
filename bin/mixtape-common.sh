@@ -81,6 +81,16 @@ versioninfo() {
     exit 1
 }
 
+# Checks if a directory looks like a valid backup dir
+is_mixtape_dir() {
+    local DIR=$1
+    if [[ -d ${DIR} && -d ${DIR}/index || -d ${DIR}/data ]] ; then
+        return 0 # true
+    else
+        return 1 # false
+    fi
+}
+
 # Prints datetime of an index file
 index_datetime() {
     local INDEX=$1 NAME
