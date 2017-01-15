@@ -14,7 +14,7 @@ source ${LIBRARY} || exit 1
 print_mixtape_status() {
     local DIR=$1
     echo "${COLOR_WARN}--- Statistics for ${DIR}: ---${COLOR_RESET}"
-    cd ${DIR}/index
+    cd ${DIR}/index 2>/dev/null || true
     local INDEX_FILES=(*.xz)
     if [[ ! -e ${INDEX_FILES[0]} ]] ; then
         echo "No index files in ${DIR}/index/"
@@ -62,11 +62,15 @@ print_disk_usage() {
 main() {
     [[ ${#PROGARGS[@]} -eq 0 ]] || usage
     [[ ${#PROGOPTS[@]} -eq 0 ]] || usage
-    for DIR in ${BACKUP_DIR}/*/mixtape ; do
-        if is_mixtape_dir ${DIR} ; then
-            print_mixtape_status ${DIR}
-        fi
-    done
+    if [[ ${MIXTAPE_DIR} != ${DEFAULT_MIXTAPE_DIR} ]] ; then
+        print_mixtape_status ${MIXTAPE_DIR}
+    else
+        for DIR in ${BACKUP_DIR}/*/mixtape ; do
+            if is_mixtape_dir ${DIR} ; then
+                print_mixtape_status ${DIR}
+            fi
+        done
+    fi
     print_disk_usage ${BACKUP_DIR}
 }
 
