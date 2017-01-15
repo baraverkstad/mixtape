@@ -16,19 +16,23 @@ SCRIPT=$(readlink $0 || echo -n $0)
 LIBRARY=$(dirname ${SCRIPT})/mixtape-common.sh
 source ${LIBRARY} || exit 1
 
-# Global vars
-INDEX_LAST=$(ls ${MIXTAPE_DIR}/index/*.xz | tail -1)
-
-# Prints files from all indices matching a pattern
-index_search_pattern() {
-    local PATTERN=$1
-    xzcat ${MIXTAPE_DIR}/index/*.xz | cut -f 6 | grep -i -- "${PATTERN}" | sort | uniq
-}
-
-# Reads index entries from stdin and prints them
+# Reads sorted index entries from stdin and prints them (grouped by file)
 index_print() {
-    local INDEX ACCESS USER GROUP DATETIME SIZEKB SIZEMB FILE SHA LOCATION EXTRA
+    local CURRENT="" CURRENT_SHA SIZEMB EXTRA
+    local INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION
     while IFS=$'\t' read INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
+        if [[ "${CURRENT}" != "${FILE}" ]] ; then
+            [[ -z ${CURRENT} ]] || echo
+            CURRENT=${FILE}
+            CURRENT_SHA=$(shasum ${FILE} 2>/dev/null | cut -d ' ' -f 1 || true)
+            echo -n "${COLOR_WARN}${FILE}"
+            if [[ ! -e ${FILE} ]] ; then
+                echo -n " ${COLOR_ERR}[deleted]"
+            elif [[ ${ACCESS:0:1} == "-" && ${CURRENT_SHA} != ${SHA} ]] ; then
+                echo -n " ${COLOR_ERR}[modified]"
+            fi
+            echo "${COLOR_RESET}"
+        fi
         if [[ -z ${SHA} ]] ; then
             EXTRA=""
         elif [[ ${SHA} = "->" ]] ; then
@@ -43,24 +47,12 @@ index_print() {
     done
 }
 
-# Checks if a file has been modified vs last index
-file_modified() {
-    local FILE=$1 LAST CURRENT INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION
-    CURRENT=$(shasum ${FILE} 2>/dev/null | cut -d ' ' -f 1)
-    while IFS=$'\t' read INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
-        if [[ ${ACCESS:0:1} != "-" || ${CURRENT} == ${SHA} ]] ; then
-            return 1 # false
-        fi
-    done < <(index_content ${INDEX_LAST} ${FILE})
-    return 0 # true
-}
-
 # Program start
 main() {
     local PATTERN FILTER OPT FILE
     [[ ${#PROGARGS[@]} -gt 0 ]] || usage
     PATTERN="${PROGARGS[@]}"
-    FILTER="uniq -f 1"
+    FILTER="uniq -f 6"
     for OPT in ${PROGOPTS+"${PROGOPTS[@]:-}"} ; do
         case "${OPT}" in
         --all)
@@ -71,17 +63,11 @@ main() {
             ;;
         esac
     done
-    for FILE in $(index_search_pattern "${PATTERN}") ; do
-        echo -n "${COLOR_WARN}${FILE}"
-        if [[ ! -e ${FILE} ]] ; then
-            echo -n " ${COLOR_ERR}[deleted]"
-        elif file_modified ${FILE} ; then
-            echo -n " ${COLOR_ERR}[modified]"
-        fi
-        echo "${COLOR_RESET}"
-        index_all_content "${MIXTAPE_DIR}" "${FILE}" | ${FILTER} | index_print
-        echo
-    done
+    index_all_content "${MIXTAPE_DIR}" "${PATTERN}" | \
+        sort --field-separator=$'\t' --key=7,7 --key=1,1 | \
+        ${FILTER} | \
+        sort --field-separator=$'\t' --key=7,7 --key=1,1r | \
+        index_print
 }
 
 main
