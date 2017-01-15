@@ -21,8 +21,10 @@ PROGOPTS=()
 VERBOSE=false
 
 # Directory variables
-BACKUP_DIR=/backup
-MIXTAPE_DIR=${BACKUP_DIR}/$(hostname)/mixtape
+DEFAULT_BACKUP_DIR=/backup
+DEFAULT_MIXTAPE_DIR=${DEFAULT_BACKUP_DIR}/$(hostname)/mixtape
+BACKUP_DIR=${DEFAULT_BACKUP_DIR}
+MIXTAPE_DIR=${DEFAULT_MIXTAPE_DIR}
 TMP_DIR=/tmp/mixtape-$$
 
 # Color variables
@@ -157,6 +159,31 @@ while [[ $# -gt 0 ]] ; do
         ;;
     --version)
         versioninfo
+        ;;
+    --backup-dir=*)
+        OPT=${1:13}
+        BACKUP_DIR=$(realpath ${OPT} 2>/dev/null)
+        MIXTAPE_DIR=${BACKUP_DIR}/$(hostname)/mixtape
+        if [[ ! -e ${BACKUP_DIR} ]] ; then
+            die "backup dir doesn't exist: ${OPT}"
+        elif [[ ! -d ${BACKUP_DIR} ]] ; then
+            die "backup dir isn't a directory: ${BACKUP_DIR}"
+        elif [[ ${BACKUP_DIR} == "/" ]] ; then
+            die "backup dir cannot be /"
+        fi
+        shift
+        ;;
+    --mixtape-dir=*)
+        OPT=${1:14}
+        MIXTAPE_DIR=$(realpath ${OPT} 2>/dev/null)
+        if [[ ! -e ${MIXTAPE_DIR} ]] ; then
+            die "mixtape dir doesn't exist: ${OPT}"
+        elif [[ ! -d ${MIXTAPE_DIR} ]] ; then
+            die "mixtape dir isn't a directory: ${MIXTAPE_DIR}"
+        elif [[ ${MIXTAPE_DIR} == "/" ]] ; then
+            die "mixtape dir cannot be /"
+        fi
+        shift
         ;;
     --)
         shift
