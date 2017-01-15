@@ -13,7 +13,7 @@ set -o pipefail
 PROGNAME=$(basename $0 .sh)
 PROGSRC=$0
 PROGID=${PROGNAME}[$$]
-VERSION=0.2
+VERSION=0.3
 
 # Command-line parsing result variables
 PROGARGS=()
