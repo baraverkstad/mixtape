@@ -109,7 +109,7 @@ index_epoch() {
 
 # Prints matching (and existing) index files for a backup dir
 index_list() {
-    local DIR="$1" MATCH="$2" GLOB FILES POS
+    local DIR="$1" MATCH="${2:-}" GLOB FILES POS
     if [[ ${MATCH:0:1} = "@" ]] ; then
         GLOB=$(date --date=@$((16#${MATCH:1})) +'%Y-%m-%d-%H%M')
     elif [[ ${MATCH} = "first" ]] ; then
@@ -131,21 +131,26 @@ index_list() {
     fi
 }
 
-# Prints contents of an index (optionally filtered by a grep regex)
+# Prints contents of an index (optionally filtered by a file regex)
 index_content() {
-    local INDEX=$1 MATCH=$2 PREFIX FILTER
-    PREFIX=$(index_epoch ${INDEX})
+    local INDEX="$1" MATCH="${2:-}" PREFIX
+    PREFIX=$(index_epoch ${INDEX})$'\t'
     if [[ -z ${MATCH} ]] ; then
-        FILTER="^"
+        xzcat ${INDEX} | \
+            awk -v prefix="${PREFIX}" '$0 = prefix$0' || \
+            true
     else
-        FILTER=$'\t'"${MATCH}"$'\t'
+        xzcat ${INDEX} | \
+            awk -F $'\t' -v IGNORECASE=1 \
+                -v regex="${MATCH}" -v prefix="${PREFIX}" \
+                "\$6 ~ regex { print prefix \$0 }" || \
+            true
     fi
-    xzcat ${INDEX} | grep "${FILTER}" | sed -e "s/^/${PREFIX}\t/" || true
 }
 
 # Prints contents for all indices (optionally filtered by a grep regex)
 index_all_content() {
-    local DIR="$1" MATCH=$2 INDEX
+    local DIR="$1" MATCH="${2:-}" INDEX
     for INDEX in ${DIR}/index/*.xz ; do
         index_content ${INDEX} "${MATCH}"
     done
