@@ -47,19 +47,19 @@ die() {
 # Logs an error to stderr and syslog
 error() {
     echo "${COLOR_ERR}ERROR:${COLOR_RESET}" "$@" >&2
-    logger -p local0.error -t "${PROGID}" "$@" || true
+    logger -p local0.error -t "${PROGID}" -- "$@" || true
 }
 
 # Logs a warning to stderr and syslog
 warn() {
     echo "${COLOR_WARN}WARNING:${COLOR_RESET}" "$@" >&2
-    logger -p local0.warning -t "${PROGID}" "$@" || true
+    logger -p local0.warning -t "${PROGID}" -- "$@" || true
 }
 
 # Logs a message to stdout and syslog (no stdout if VERBOSE is false)
 log() {
     ${VERBOSE} && echo $(date +"%F %T"): "$@" || true
-    logger -p local0.info -t "${PROGID}" "$@" || true
+    logger -p local0.info -t "${PROGID}" -- "$@" || true
 }
 
 # Prints command-line usage info and exits
