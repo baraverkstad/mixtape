@@ -5,7 +5,7 @@
 # Syntax: mixtape-search [--all] <pattern>
 #
 # Arguments:
-#   <pattern>        A grep (regex) search pattern (i.e. '.*' for any char)
+#   <pattern>        A regex search pattern (i.e. '.' for any char)
 #
 # Options:
 #   --all            Print all matching backups (not only first)
