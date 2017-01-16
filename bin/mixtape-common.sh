@@ -95,24 +95,38 @@ is_mixtape_dir() {
 
 # Prints a datetime of an index file or id (in optional format)
 index_datetime() {
-    local INDEX=$1 FORMAT=${2:-}
+    local INDEX=${1:-now} FORMAT=${2:-iso} DATETIME
     if [[ -z "${FORMAT}" || "${FORMAT}" == "iso" ]] ; then
         FORMAT="%Y-%m-%d %H:%M"
     elif [[ "${FORMAT}" == "file" ]] ; then
         FORMAT="%Y-%m-%d-%H%M"
     fi
-    if [[ ${INDEX:0:1} == "@" ]] ; then
-        echo -n $(date --date=@$((16#${INDEX:1})) +"${FORMAT}")
-    else
-        local STR=${INDEX##*/index.}
-        echo -n $(date --date="${STR:0:10} ${STR:11:2}:${STR:13:2}" +"${FORMAT}")
-    fi
+    case "${INDEX}" in
+    *index.????-??-??-????.txt.xz)
+        DATETIME=${INDEX##*index.}
+        DATETIME="${DATETIME:0:10} ${DATETIME:11:2}:${DATETIME:13:2}"
+        ;;
+    @*)
+        DATETIME="@$((16#${INDEX:1}))"
+        ;;
+    *)
+        DATETIME="${INDEX}"
+        ;;
+    esac
+    echo -n $(date --date="${DATETIME}" +"${FORMAT}")
 }
 
 # Prints hex epoch of an index file
 index_epoch() {
-    local INDEX=$1 DATETIME
-    DATETIME=$(index_datetime ${INDEX})
+    local INDEX=${1:-now} DATETIME
+    case "${INDEX}" in
+    *index.????-??-??-????.txt.xz)
+        DATETIME=$(index_datetime ${INDEX})
+        ;;
+    *)
+        DATETIME="${INDEX}"
+        ;;
+    esac
     printf "@%x" $(date --date="${DATETIME}" +"%s")
 }
 
