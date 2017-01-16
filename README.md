@@ -63,8 +63,8 @@ Here are some of them:
 Deduplicating backup tools exist aplenty today. At the time of writing, here
 are some of the most promising (in no particular order):
 
-- Duplicity — http://duplicity.nongnu.org/index.html
-- Borg Backup — https://borgbackup.readthedocs.io/en/stable/
+- Duplicity — http://duplicity.nongnu.org/
+- Borg Backup — https://borgbackup.readthedocs.io/
 - ZBackup — http://zbackup.org
 - BUP — https://bup.github.io
 - rdedup — https://github.com/dpc/rdedup
