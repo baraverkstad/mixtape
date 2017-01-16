@@ -93,11 +93,20 @@ is_mixtape_dir() {
     fi
 }
 
-# Prints datetime of an index file
+# Prints a datetime of an index file or id (in optional format)
 index_datetime() {
-    local INDEX=$1 NAME
-    NAME=${INDEX##*/}
-    echo -n "${NAME:6:10} ${NAME:17:2}:${NAME:19:2}"
+    local INDEX=$1 FORMAT=${2:-}
+    if [[ -z "${FORMAT}" || "${FORMAT}" == "iso" ]] ; then
+        FORMAT="%Y-%m-%d %H:%M"
+    elif [[ "${FORMAT}" == "file" ]] ; then
+        FORMAT="%Y-%m-%d-%H%M"
+    fi
+    if [[ ${INDEX:0:1} == "@" ]] ; then
+        echo -n $(date --date=@$((16#${INDEX:1})) +"${FORMAT}")
+    else
+        local STR=${INDEX##*/index.}
+        echo -n $(date --date="${STR:0:10} ${STR:11:2}:${STR:13:2}" +"${FORMAT}")
+    fi
 }
 
 # Prints hex epoch of an index file
