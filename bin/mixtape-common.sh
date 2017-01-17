@@ -134,7 +134,9 @@ index_epoch() {
 index_list() {
     local DIR="$1" MATCH="${2:-}" GLOB FILES POS
     if [[ ${MATCH:0:1} = "@" ]] ; then
-        GLOB=$(date --date=@$((16#${MATCH:1})) +'%Y-%m-%d-%H%M')
+        GLOB=$(index_datetime ${MATCH} file)
+    elif [[ ${MATCH} = "all" || ${MATCH} = "*" ]] ; then
+        GLOB="*"
     elif [[ ${MATCH} = "first" ]] ; then
         GLOB="*"
         POS=0
