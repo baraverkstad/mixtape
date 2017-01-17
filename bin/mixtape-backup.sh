@@ -35,7 +35,7 @@ mkdir -p ${TMP_DIR} ${INDEX_DIR} ${DATA_DIR}
 
 # List input files
 echo '.git .hg .svn' > ${INPUT_IGNORE}
-touch ${INPIT_INCLUDE} ${INPUT_EXCLUDE}
+touch ${INPUT_INCLUDE} ${INPUT_EXCLUDE}
 while read RULE ; do
     [[ "${RULE}" != "" && "${RULE:0:1}" != "#" ]] || continue
     if [[ "${RULE:0:1}" == "-" ]] ; then
@@ -50,7 +50,7 @@ find $(<${INPUT_INCLUDE}) \
      $(xargs -L 1 printf '-not ( -path %s -prune ) ' <${INPUT_EXCLUDE}) \
      $(xargs -L 1 printf '-not ( -name %s -prune ) ' <${INPUT_IGNORE}) \
      -printf '%M\t%u\t%g\t%TF %.8TT\t%k\t%p\t%l\n' | \
-     sort --field-separator=$'\t' --key=6 > ${INPUT_FILES}
+     sort --field-separator=$'\t' --key=6,6 > ${INPUT_FILES}
 
 # Match to existing index
 if [[ -e "${INPUT_INDEX}" ]] ; then
@@ -115,7 +115,7 @@ grep ^l ${INPUT_FILES} | awk -F $'\t' '{print $6 "\t->\t" $7}' >> ${STORE_UNSORT
 
 # Build output index
 if [[ -s ${STORE_UNSORTED} ]] ; then
-    sort --field-separator=$'\t' --key=6 ${STORE_UNSORTED} > ${STORE_SORTED}
+    sort --field-separator=$'\t' --key=6,6 ${STORE_UNSORTED} > ${STORE_SORTED}
     join -t $'\t' -a 1 -1 6 -2 1 -o $'1.1\t1.2\t1.3\t1.4\t1.5\t1.6\t2.2\t2.3' \
          ${MATCH_FILES} ${STORE_SORTED} > ${OUTPUT_INDEX}
 else
