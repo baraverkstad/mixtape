@@ -1,11 +1,30 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# Stores copies of files to a backup.
+#
+# Syntax: mixtape-backup
+#
+# Config:
+#   /etc/mixtape-backup.conf
+#       Lists directories to backup, one per line
+#
 
+# Import common functions
+SCRIPT=$(readlink $0 || echo -n $0)
+LIBRARY=$(dirname ${SCRIPT})/mixtape-common.sh
+source ${LIBRARY} || exit 1
+
+# Unset caution flags
+# TODO: revert this once script converted
+set +o nounset
+set +o errtrace
+set +o errexit
+set +o pipefail
+
+# Global vars
 CONFIG=mixtape-backup.conf
-LOCALDIR=$(dirname $0)/..
-HOST=$(hostname)
-TMP_DIR=/tmp/backup-$$
-DATA_DIR=/backup/${HOST}/mixtape/data
-INDEX_DIR=/backup/${HOST}/mixtape/index
+DATA_DIR=${MIXTAPE_DIR}/data
+INDEX_DIR=${MIXTAPE_DIR}/index
 
 DATE_MONTH=$(date '+%Y-%m')
 DATE_MINUTE=$(date '+%Y-%m-%d-%H%M')
@@ -26,9 +45,6 @@ STORE_UNSORTED=${TMP_DIR}/store-unsorted.txt
 STORE_SORTED=${TMP_DIR}/store-sorted.txt
 OUTPUT_TARFILE=${DATA_DIR}/files/${DATE_MONTH}/files.${DATE_MINUTE}.tar.xz
 OUTPUT_INDEX=${INDEX_DIR}/index.${DATE_MINUTE}.txt
-
-# TODO: Index search tool
-# TODO: Restore tool (full backup & single files, restore timestamp + owner)
 
 rm -rf ${TMP_DIR}
 mkdir -p ${TMP_DIR} ${INDEX_DIR} ${DATA_DIR}
