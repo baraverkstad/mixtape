@@ -58,10 +58,10 @@ warn() {
     logger -p local0.warning -t "${PROGID}" -- "$@" || true
 }
 
-# Logs a message to stdout and syslog (no stdout if VERBOSE is false)
+# Logs a message to stdout and syslog (if VERBOSE is true)
 log() {
     ${VERBOSE} && echo $(date +"%F %T"): "$@" || true
-    logger -p local0.info -t "${PROGID}" -- "$@" || true
+    ${VERBOSE} && logger -p local0.info -t "${PROGID}" -- "$@" || true
 }
 
 # Prints command-line usage info and exits
