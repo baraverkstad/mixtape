@@ -50,10 +50,10 @@ index_print() {
 # Program start
 main() {
     local PATTERN FILTER OPT FILE
-    [[ ${#PROGARGS[@]} -gt 0 ]] || usage
-    PATTERN="${PROGARGS[@]}"
+    [[ ${#ARGS[@]} -gt 0 ]] || usage
+    PATTERN="${ARGS[@]}"
     FILTER="uniq -f 6"
-    for OPT in ${PROGOPTS+"${PROGOPTS[@]:-}"} ; do
+    for OPT in ${OPTS+"${OPTS[@]:-}"} ; do
         case "${OPT}" in
         --all)
             FILTER="cat"

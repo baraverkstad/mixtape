@@ -16,8 +16,8 @@ PROGRAM_ID=${PROGRAM_NAME}[$$]
 VERSION=0.3
 
 # Command-line parsing result variables
-PROGARGS=()
-PROGOPTS=()
+ARGS=()
+OPTS=()
 VERBOSE=false
 
 # Directory variables
@@ -81,6 +81,53 @@ usage() {
 versioninfo() {
     echo "${PROGRAM_NAME}, version ${VERSION}"
     exit 1
+}
+
+# Parse command-line arguments
+parseargs() {
+    while [[ $# -gt 0 ]] ; do
+        case "$1" in
+        -\?|-h|--help)
+            usage
+            ;;
+        --version)
+            versioninfo
+            ;;
+        --backup-dir=*)
+            BACKUP_DIR=$(realpath ${1#*=} 2>/dev/null)
+            MIXTAPE_DIR=${BACKUP_DIR}/$(hostname)/mixtape
+            if [[ ! -e ${BACKUP_DIR} ]] ; then
+                die "backup dir doesn't exist: ${1#*=}"
+            elif [[ ! -d ${BACKUP_DIR} ]] ; then
+                die "backup dir isn't a directory: ${BACKUP_DIR}"
+            elif [[ ${BACKUP_DIR} == "/" ]] ; then
+                die "backup dir cannot be /"
+            fi
+            ;;
+        --mixtape-dir=*)
+            MIXTAPE_DIR=$(realpath ${1#*=} 2>/dev/null)
+            if [[ ! -e ${MIXTAPE_DIR} ]] ; then
+                die "mixtape dir doesn't exist: ${1#*=}"
+            elif [[ ! -d ${MIXTAPE_DIR} ]] ; then
+                die "mixtape dir isn't a directory: ${MIXTAPE_DIR}"
+            elif [[ ${MIXTAPE_DIR} == "/" ]] ; then
+                die "mixtape dir cannot be /"
+            fi
+            ;;
+        --)
+            shift
+            ARGS+=("$@")
+            break
+            ;;
+        -*)
+            OPTS+=("$1")
+            ;;
+        *)
+            ARGS+=("$1")
+            ;;
+        esac
+        shift
+    done
 }
 
 # Checks if a directory looks like a valid backup dir
@@ -181,55 +228,6 @@ index_all_content() {
     done
 }
 
-# Parse command-line arguments
-while [[ $# -gt 0 ]] ; do
-    case "$1" in
-    -\?|-h|--help)
-        usage
-        ;;
-    --version)
-        versioninfo
-        ;;
-    --backup-dir=*)
-        OPT=${1:13}
-        BACKUP_DIR=$(realpath ${OPT} 2>/dev/null)
-        MIXTAPE_DIR=${BACKUP_DIR}/$(hostname)/mixtape
-        if [[ ! -e ${BACKUP_DIR} ]] ; then
-            die "backup dir doesn't exist: ${OPT}"
-        elif [[ ! -d ${BACKUP_DIR} ]] ; then
-            die "backup dir isn't a directory: ${BACKUP_DIR}"
-        elif [[ ${BACKUP_DIR} == "/" ]] ; then
-            die "backup dir cannot be /"
-        fi
-        shift
-        ;;
-    --mixtape-dir=*)
-        OPT=${1:14}
-        MIXTAPE_DIR=$(realpath ${OPT} 2>/dev/null)
-        if [[ ! -e ${MIXTAPE_DIR} ]] ; then
-            die "mixtape dir doesn't exist: ${OPT}"
-        elif [[ ! -d ${MIXTAPE_DIR} ]] ; then
-            die "mixtape dir isn't a directory: ${MIXTAPE_DIR}"
-        elif [[ ${MIXTAPE_DIR} == "/" ]] ; then
-            die "mixtape dir cannot be /"
-        fi
-        shift
-        ;;
-    --)
-        shift
-        PROGARGS+=("$@")
-        break
-        ;;
-    -*)
-        PROGOPTS+=("$1")
-        shift
-        ;;
-    *)
-        PROGARGS+=("$1")
-        shift
-        ;;
-    esac
-done
-
-# End with success
+# Parse command-line and end with success
+parseargs "$@"
 true

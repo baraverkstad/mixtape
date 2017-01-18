@@ -9,6 +9,17 @@ source $(dirname $0)/assert.sh
 # Import common functions
 source $(dirname $0)/../bin/mixtape-common.sh
 
+# Tests the parseargs function
+test_parseargs() {
+    ARGS=()
+    OPTS=()
+    parseargs one --flag two -- --three
+    assert "echo -n ${#ARGS[*]}" "3"
+    assert "echo -n ${ARGS[*]}" "one two --three"
+    assert "echo -n ${#OPTS[*]}" "1"
+    assert "echo -n ${OPTS[*]}" "--flag"
+}
+
 # Tests the index_datetime function
 test_index_datetime() {
     local ID="@587c2ac4"

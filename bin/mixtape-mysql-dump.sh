@@ -21,9 +21,9 @@ OPTIONS="--opt --quote-names --skip-add-locks --skip-lock-tables"
 EXTRAS=""
 
 # Handle command-line arguments
-[[ ${#PROGARGS[@]} -gt 0 ]] || usage
-if [[ ${#PROGOPTS[@]} -gt 0 ]] ; then
-    EXTRAS="${PROGOPTS[@]}"
+[[ ${#ARGS[@]} -gt 0 ]] || usage
+if [[ ${#OPTS[@]} -gt 0 ]] ; then
+    EXTRAS="${OPTS[@]}"
 fi
 
 # Special Debian/Ubuntu default file location
@@ -32,4 +32,4 @@ if [[ -r /etc/mysql/debian.cnf ]] ; then
 fi
 
 # Perform MySQL backup
-exec mysqldump ${OPTIONS} ${EXTRAS} --databases "${PROGARGS[@]}"
+exec mysqldump ${OPTIONS} ${EXTRAS} --databases "${ARGS[@]}"

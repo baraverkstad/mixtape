@@ -23,10 +23,10 @@ source ${LIBRARY} || exit 1
 
 # Prints index information
 index_info() {
-    local INDEX="$1"
-    echo -n "${COLOR_WARN}$(index_epoch ${INDEX})${COLOR_RESET}: ${INDEX}"
-    xzcat ${INDEX} | wc -l | awk '{printf " (%s entries",$1}'
-    du -h ${INDEX} | awk '{printf ", %s)\n",$1}'
+    local FILE="$1"
+    echo -n "${COLOR_WARN}$(index_epoch ${FILE})${COLOR_RESET}: ${FILE}"
+    xzcat ${FILE} | wc -l | awk '{printf " (%s entries",$1}'
+    du -h ${FILE} | awk '{printf ", %s)\n",$1}'
 }
 
 # Reads index entries from stdin and prints them
@@ -48,8 +48,6 @@ index_content_print() {
         fi
         if [[ ${FORMAT} == "long" ]] ; then
             printf "%s  %s  %6s  %s%s\n" ${ACCESS} "${DATETIME}" "${SIZE}" "${FILE}" "${EXTRA}"
-        #elif [[ ${FORMAT} == "full" ]] ; then
-        #    printf "%s  %s %s  %s  %6s  %s%s\n" ${ACCESS} ${USER} ${GROUP} "${DATETIME}" "${SIZE}" "${FILE}" "${EXTRA}"
         else
             printf "%s\n" "${FILE}"
         fi
@@ -64,10 +62,9 @@ index_content_print() {
 
 # Program start
 main() {
-    local ID="" PREFIX="" FORMAT="short" INDEX FIRST=true
-    [[ ${#PROGARGS[@]} -le 2 ]] || usage
-    while [[ ${#PROGOPTS[@]} -gt 0 ]] ; do
-        case "${PROGOPTS[0]}" in
+    local FORMAT="short" INDEX="" FILEPATH="" FIRST=true OPT INDEX_FILE
+    for OPT in ${OPTS+"${OPTS[@]}"} ; do
+        case "${OPT}" in
         --long)
             FORMAT="long"
             ;;
@@ -75,22 +72,18 @@ main() {
             usage
             ;;
         esac
-        PROGOPTS=("${PROGOPTS[@]:1}")
     done
-    if [[ ${#PROGARGS[@]} -ge 1 ]] ; then
-        ID="${PROGARGS[0]}"
+    [[ ${#ARGS[@]} -le 2 ]] || usage
+    INDEX="${ARGS[0]:-}"
+    FILEPATH="${ARGS[1]:-}"
+    if [[ -n "${FILEPATH}" && "${FILEPATH:0:1}" != "/" ]] ; then
+        FILEPATH="/${FILEPATH}"
     fi
-    if [[ ${#PROGARGS[@]} -ge 2 ]] ; then
-        PREFIX="${PROGARGS[1]}"
-        if [[ "${PREFIX:0:1}" != "/" ]] ; then
-            PREFIX="/${PREFIX}"
-        fi
-    fi
-    for INDEX in $(index_list "${MIXTAPE_DIR}" "${ID}") ; do
-        ${FIRST} || [[ -z "${PREFIX}" ]] || echo
-        index_info "${INDEX}"
-        if [[ -n "${PREFIX}" ]] ; then
-            index_content "${INDEX}" "^${PREFIX}" | index_content_print ${FORMAT}
+    for INDEX_FILE in $(index_list "${MIXTAPE_DIR}" "${INDEX}") ; do
+        ${FIRST} || [[ -z "${FILEPATH}" ]] || echo
+        index_info "${INDEX_FILE}"
+        if [[ -n "${FILEPATH}" ]] ; then
+            index_content "${INDEX_FILE}" "^${FILEPATH}" | index_content_print ${FORMAT}
         fi
         FIRST=false
     done

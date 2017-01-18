@@ -60,8 +60,8 @@ print_disk_usage() {
 
 # Program start
 main() {
-    [[ ${#PROGARGS[@]} -eq 0 ]] || usage
-    [[ ${#PROGOPTS[@]} -eq 0 ]] || usage
+    [[ ${#ARGS[@]} -eq 0 ]] || usage
+    [[ ${#OPTS[@]} -eq 0 ]] || usage
     if [[ ${MIXTAPE_DIR} != ${DEFAULT_MIXTAPE_DIR} ]] ; then
         print_mixtape_status ${MIXTAPE_DIR}
     else
