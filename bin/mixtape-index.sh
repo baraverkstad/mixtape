@@ -63,16 +63,10 @@ index_content_print() {
 # Program start
 main() {
     local FORMAT="short" INDEX="" FILEPATH="" FIRST=true OPT INDEX_FILE
-    for OPT in ${OPTS+"${OPTS[@]}"} ; do
-        case "${OPT}" in
-        --long)
-            FORMAT="long"
-            ;;
-        *)
-            usage
-            ;;
-        esac
-    done
+    checkopts --long
+    if parseopt --long ; then
+        FORMAT="long"
+    fi
     [[ ${#ARGS[@]} -le 2 ]] || usage
     INDEX="${ARGS[0]:-}"
     FILEPATH="${ARGS[1]:-}"

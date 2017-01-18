@@ -83,7 +83,7 @@ versioninfo() {
     exit 1
 }
 
-# Parse command-line arguments
+# Parse command-line arguments to ARGS and OPTS vars
 parseargs() {
     while [[ $# -gt 0 ]] ; do
         case "$1" in
@@ -128,6 +128,50 @@ parseargs() {
         esac
         shift
     done
+}
+
+# Checks OPTS content against the function arguments
+checkopts() {
+    local OPTIONS OPT
+    OPTIONS=" $* "
+    for OPT in ${OPTS+"${OPTS[@]}"} ; do
+        if [[ "${OPT}" == *=* ]] ; then
+            OPT="${OPT%%=*}="
+        else
+            OPT="${OPT} "
+        fi
+        if [[ ${OPTIONS} != *${OPT}* ]] ; then
+            usage
+        fi
+    done
+}
+
+# Reads an option from OPTS, or returns a default value
+parseopt() {
+    local DEF=$1 OPT NAME MATCH
+    for OPT in ${OPTS+"${OPTS[@]}"} ; do
+        if [[ "${OPT}" == *=* ]] ; then
+            NAME="${OPT%%=*}"
+            if [[ ${DEF} == ${NAME}=* ]] ; then
+                echo -n "${OPT#*=}"
+                return 0
+            elif [[ ${DEF} == ${NAME} ]] ; then
+                usage
+            fi
+        else
+            if [[ ${DEF} == ${OPT} ]] ; then
+                return 0
+            elif [[ ${DEF} == ${OPT}=* ]] ; then
+                usage
+            fi
+        fi
+    done
+    if [[ "${DEF}" == *=* ]] ; then
+        echo -n "${DEF#*=}"
+        return 0
+    else
+        return 1
+    fi
 }
 
 # Checks if a directory looks like a valid backup dir

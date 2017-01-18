@@ -13,11 +13,24 @@ source $(dirname $0)/../bin/mixtape-common.sh
 test_parseargs() {
     ARGS=()
     OPTS=()
-    parseargs one --flag two -- --three
+    parseargs --flag one --opt=value two -- --three
     assert "echo -n ${#ARGS[*]}" "3"
     assert "echo -n ${ARGS[*]}" "one two --three"
-    assert "echo -n ${#OPTS[*]}" "1"
-    assert "echo -n ${OPTS[*]}" "--flag"
+    assert "echo -n ${#OPTS[*]}" "2"
+    assert "echo -n ${OPTS[*]}" "--flag --opt=value"
+    assert_raises "checkopts --flag --opt=" 0
+    assert_raises "checkopts --dummy --flag --test= --opt=" 0
+    assert_raises "checkopts --flag" 1
+    assert_raises "checkopts --flag --opt" 1
+    assert_raises "checkopts --flag= --opt=" 1
+    assert "parseopt --opt=defval" "value"
+    assert "parseopt --unset=defval" "defval"
+    assert "parseopt --unset=" ""
+    assert_raises "parseopt --opt" 1
+    assert_raises "parseopt --opt=" 0
+    assert_raises "parseopt --flag" 0
+    assert_raises "parseopt --flag=" 1
+    assert_raises "parseopt --unset" 1
 }
 
 # Tests the index_datetime function

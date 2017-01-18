@@ -49,20 +49,13 @@ index_print() {
 
 # Program start
 main() {
-    local PATTERN FILTER OPT FILE
+    local FILTER="uniq -f 6" PATTERN FILTER OPT FILE
+    checkopts --all
+    if parseopt --all ; then
+        FILTER="cat"
+    fi
     [[ ${#ARGS[@]} -gt 0 ]] || usage
     PATTERN="${ARGS[@]}"
-    FILTER="uniq -f 6"
-    for OPT in ${OPTS+"${OPTS[@]:-}"} ; do
-        case "${OPT}" in
-        --all)
-            FILTER="cat"
-            ;;
-        *)
-            usage
-            ;;
-        esac
-    done
     index_all_content "${MIXTAPE_DIR}" "${PATTERN}" | \
         sort --field-separator=$'\t' --key=7,7 --key=1,1 | \
         ${FILTER} | \
