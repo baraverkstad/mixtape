@@ -9,10 +9,10 @@ set -o errtrace
 set -o errexit
 set -o pipefail
 
-# Process & version variables
-PROGNAME=$(basename $0 .sh)
-PROGSRC=$0
-PROGID=${PROGNAME}[$$]
+# Program & version variables
+PROGRAM=$0
+PROGRAM_NAME=$(basename ${PROGRAM} .sh)
+PROGRAM_ID=${PROGRAM_NAME}[$$]
 VERSION=0.3
 
 # Command-line parsing result variables
@@ -49,19 +49,19 @@ die() {
 # Logs an error to stderr and syslog
 error() {
     echo "${COLOR_ERR}ERROR:${COLOR_RESET}" "$@" >&2
-    logger -p local0.error -t "${PROGID}" -- "$@" || true
+    logger -p local0.error -t "${PROGRAM_ID}" -- "$@" || true
 }
 
 # Logs a warning to stderr and syslog
 warn() {
     echo "${COLOR_WARN}WARNING:${COLOR_RESET}" "$@" >&2
-    logger -p local0.warning -t "${PROGID}" -- "$@" || true
+    logger -p local0.warning -t "${PROGRAM_ID}" -- "$@" || true
 }
 
 # Logs a message to stdout and syslog (if VERBOSE is true)
 log() {
     ${VERBOSE} && echo $(date +"%F %T"): "$@" || true
-    ${VERBOSE} && logger -p local0.info -t "${PROGID}" -- "$@" || true
+    ${VERBOSE} && logger -p local0.info -t "${PROGRAM_ID}" -- "$@" || true
 }
 
 # Prints command-line usage info and exits
@@ -73,13 +73,13 @@ usage() {
         else
             break
         fi
-    done < <(tail -n +3 $PROGSRC)
+    done < <(tail -n +3 $PROGRAM)
     exit 1
 }
 
 # Prints program name and version, then exits
 versioninfo() {
-    echo "${PROGNAME}, version ${VERSION}"
+    echo "${PROGRAM_NAME}, version ${VERSION}"
     exit 1
 }
 
