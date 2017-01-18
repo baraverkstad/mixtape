@@ -3,13 +3,12 @@
 # Runs tests for mixtape-common library.
 #
 
-# Import assert functions
-source $(dirname $0)/assert.sh
+# Global vars & imports
+TEST_DIR=$(dirname $0)
+source ${TEST_DIR}/assert.sh
+source ${TEST_DIR}/../bin/mixtape-common.sh
 
-# Import common functions
-source $(dirname $0)/../bin/mixtape-common.sh
-
-# Tests the parseargs function
+# Tests the parseargs, checkopts & parseopt functions
 test_parseargs() {
     ARGS=()
     OPTS=()
@@ -31,6 +30,16 @@ test_parseargs() {
     assert_raises "parseopt --flag" 0
     assert_raises "parseopt --flag=" 1
     assert_raises "parseopt --unset" 1
+}
+
+# Tests the is_mixtape_dir function
+test_is_mixtape_dir() {
+    assert "is_mixtape_dir ${TEST_DIR}/mixtape" ""
+    assert_raises "is_mixtape_dir ${TEST_DIR}/mixtape" 0
+    assert "is_mixtape_dir ${TEST_DIR}/does-not-exist" ""
+    assert_raises "is_mixtape_dir ${TEST_DIR}/does-not-exist" 1
+    assert "is_mixtape_dir /tmp/does-not-exist/neither-this" ""
+    assert_raises "is_mixtape_dir /tmp/does-not-exist/neither-this" 1
 }
 
 # Tests the index_datetime function
@@ -59,6 +68,21 @@ test_index_epoch() {
     assert "index_epoch ${FILE}" "@587c2ac4"
     assert "index_epoch ${INDEX}" "@587c2ac4"
     assert "index_epoch '2017-01-16 02:07'" "@587c2ac4"
+}
+
+# Tests the index_list function
+test_index_list() {
+    local DIR=${TEST_DIR}/mixtape
+    local IX1="${DIR}/index/index.2017-01-18-0826.txt.xz"
+    assert "index_list ${DIR}" "${IX1}"
+    assert "index_list ${DIR} @587f2698" "${IX1}"
+    assert "index_list ${DIR} all" "${IX1}"
+    assert "index_list ${DIR} first" "${IX1}"
+    assert "index_list ${DIR} last" "${IX1}"
+    assert "index_list ${DIR} 2017-*" "${IX1}"
+    assert "index_list ${DIR} 0?-18" "${IX1}"
+    assert "index_list ${DIR} @187f2698" ""
+    assert "index_list ${DIR} 2016-*" ""
 }
 
 # Program start
