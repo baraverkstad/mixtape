@@ -323,7 +323,7 @@ largefile_store() {
     if [[ -z "${SHA}" ]] ; then
         SHA=$(shasum ${FILE} | cut -d ' ' -f 1)
     fi
-    OUTFILE=$(largefile_search_sha "${SHA}")
+    OUTFILE=$(largefile_search_sha "${DIR}" "${SHA}")
     if [[ ! -e "${OUTFILE}" ]] ; then
         OUTFILE=${DIR}/data/${SHA:0:3}/${SHA:3:3}/$(basename "${FILE}")
         mkdir -p $(dirname "${OUTFILE}")
