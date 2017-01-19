@@ -341,6 +341,20 @@ largefile_store() {
     echo -n "${OUTFILE}"
 }
 
+# Restores a file from the large file store
+largefile_restore() {
+    local SRC=$1 DST=$2 DIR
+    DIR="${DST%/*}"
+    if [[ ! -d "${DIR}" ]] ; then
+        mkdir -p "${DIR}"
+    fi
+    if [[ "${SRC}" == *.xz && "${SRC: -3}" != "${DST: -3}" ]] ; then
+        xzcat "${SRC}" > "${DST}"
+    else
+        cp "${SRC}" "${DST}"
+    fi
+}
+
 # Parse command-line and end with success
 parseargs "$@"
 true

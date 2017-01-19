@@ -151,6 +151,25 @@ test_largefile_store() {
     rm -rf ${DIR}
 }
 
+# Tests the largefile_restore function
+test_largefile_restore() {
+    DIR=${TEST_DIR}/tmp-$$
+    SRC1="${TEST_DIR}/mixtape/data/bff/f42/unsplash#1015-2048x1536.jpg"
+    SRC2="${TEST_DIR}/mixtape/data/eb7/faf/loremipsum.txt.xz"
+    DST1="${DIR}/sub/dir/unsplash#1015-2048x1536.jpg"
+    DST2="${DIR}/sub/dir/loremipsum.txt"
+    SHA1="bfff4213a7adcb1c33e76f78484a167fe2848113"
+    SHA2="eb7faf0b51528980753879c8e51d1f59e0e9c630"
+    mkdir -p ${DIR}
+    assert_raises "largefile_restore ${SRC1} ${DST1}" 0
+    assert_raises "largefile_restore ${SRC2} ${DST2}" 0
+    assert "find ${DIR} -type f | wc -l" "2"
+    assert "find ${DIR} -type d | tail -1" "${DIR}/sub/dir"
+    assert "shasum ${DST1} | cut -d ' ' -f 1" "${SHA1}"
+    assert "shasum ${DST2} | cut -d ' ' -f 1" "${SHA2}"
+    rm -rf ${DIR}
+}
+
 # Program start
 main() {
     local FUNC
