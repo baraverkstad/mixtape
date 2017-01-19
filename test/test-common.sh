@@ -73,14 +73,14 @@ test_index_epoch() {
 # Tests the index_list function
 test_index_list() {
     local DIR=${TEST_DIR}/mixtape
-    local IX1="${DIR}/index/index.2017-01-18-0826.txt.xz"
+    local IX1="${DIR}/index/index.2017-01-19-0846.txt.xz"
     assert "index_list ${DIR}" "${IX1}"
-    assert "index_list ${DIR} @587f2698" "${IX1}"
+    assert "index_list ${DIR} @58807cc8" "${IX1}"
     assert "index_list ${DIR} all" "${IX1}"
     assert "index_list ${DIR} first" "${IX1}"
     assert "index_list ${DIR} last" "${IX1}"
     assert "index_list ${DIR} 2017-*" "${IX1}"
-    assert "index_list ${DIR} 0?-18" "${IX1}"
+    assert "index_list ${DIR} 0?-19" "${IX1}"
     assert "index_list ${DIR} @187f2698" ""
     assert "index_list ${DIR} 2016-*" ""
 }
@@ -88,11 +88,11 @@ test_index_list() {
 # Tests the index_content function
 test_index_content() {
     local DIR=${TEST_DIR}/mixtape
-    local IX1="${DIR}/index/index.2017-01-18-0826.txt.xz"
-    assert "index_content ${IX1} | wc -l" "6"
+    local IX1="${DIR}/index/index.2017-01-19-0846.txt.xz"
+    assert "index_content ${IX1} | wc -l" "7"
     assert "index_content ${IX1} | awk -F'\t' '{print NF; exit}'" "9"
-    assert "index_content ${IX1} | awk -F'\t' '{print \$1; exit}'" "@587f2698"
-    assert "index_content ${IX1} / | wc -l" "6"
+    assert "index_content ${IX1} | awk -F'\t' '{print \$1; exit}'" "@58807cc8"
+    assert "index_content ${IX1} / | wc -l" "7"
     assert "index_content ${IX1} README | wc -l" "1"
     assert "index_content ${IX1} 'unsplash*.jpg' | wc -l" "1"
     assert "index_content ${IX1} 'test*.jpg' | wc -l" "0"
