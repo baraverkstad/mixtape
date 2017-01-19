@@ -128,6 +128,29 @@ test_largefile_search_sha() {
     assert "largefile_search_sha ${DIR} ${SHA3}" ""
 }
 
+# Tests the largefile_store function
+test_largefile_store() {
+    DIR=${TEST_DIR}/tmp-$$
+    SRC1="${TEST_DIR}/mixtape/data/bff/f42/unsplash#1015-2048x1536.jpg"
+    SRC2="${DIR}/dummy-copy.jpg"
+    SRC3="${DIR}/loremipsum.txt"
+    DST1="${DIR}/data/bff/f42/unsplash#1015-2048x1536.jpg"
+    DST2="${DIR}/data/eb7/faf/loremipsum.txt.xz"
+    SHA1="bfff4213a7adcb1c33e76f78484a167fe2848113"
+    mkdir -p ${DIR}
+    cp ${SRC1} ${SRC2}
+    xzcat "${TEST_DIR}/mixtape/data/eb7/faf/loremipsum.txt.xz" > ${SRC3}
+    assert "largefile_store ${DIR} ${SRC1}" "${DST1}"
+    assert "largefile_store ${DIR} ${SRC2}" "${DST1}"
+    assert "largefile_store ${DIR} ${SRC3}" "${DST2}"
+    assert "largefile_store ${DIR} ${SRC3} ${SHA1}" "${DST1}"
+    assert "find ${DIR}/data -type f | wc -l" "2"
+    assert_raises "cmp --quiet ${SRC1} ${DST1}" 0
+    assert_raises "cmp --quiet ${SRC2} ${DST1}" 0
+    assert_raises "cmp --quiet ${SRC3} ${DST2}" 1
+    rm -rf ${DIR}
+}
+
 # Program start
 main() {
     local FUNC
