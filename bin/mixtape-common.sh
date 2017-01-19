@@ -299,6 +299,48 @@ index_content_regex() {
     (IFS=; echo -n "${RE[*]}")
 }
 
+# Searches for a file by SHA in the large file store
+largefile_search_sha() {
+    local DIR=$1 SHA=$2 FILE FILESHA SUBSTR
+    SUBSTR=" ${SHA} "
+    for FILE in ${DIR}/data/${SHA:0:3}/${SHA:3:3}/* ; do
+        if [[ -e ${FILE} ]] ; then
+            FILESHA=" $(shasum ${FILE} | cut -d ' ' -f 1) "
+            if [[ ${FILE} == *.xz ]] ; then
+                FILESHA+="$(xzcat ${FILE} | shasum | cut -d ' ' -f 1) "
+            fi
+            if [[ ${FILESHA} == *"${SUBSTR}"* ]] ; then
+                echo -n "${FILE}"
+                break
+            fi
+        fi
+    done
+}
+
+# Stores a file into the large file store (if not already present)
+largefile_store() {
+    local DIR=$1 FILE=$2 SHA=${3:-} OUTFILE
+    if [[ -z "${SHA}" ]] ; then
+        SHA=$(shasum ${FILE} | cut -d ' ' -f 1)
+    fi
+    OUTFILE=$(largefile_search_sha "${SHA}")
+    if [[ ! -e "${OUTFILE}" ]] ; then
+        OUTFILE=${DIR}/data/${SHA:0:3}/${SHA:3:3}/$(basename "${FILE}")
+        mkdir -p $(dirname "${OUTFILE}")
+        case "${FILE}" in
+        *.7z | *.bz2 | *.gz | *.?ar | *.lz* | *.lha | *.tgz | *.xz | *.z | *.zip | *.zoo | \
+        *.dmg | *.gif | *.jpg | *.mp4 | *.web* | *.wmv )
+            cp -a "${FILE}" "${OUTFILE}"
+            ;;
+        *)
+            OUTFILE="${OUTFILE}.xz"
+            xz --stdout "${FILE}" > "${OUTFILE}"
+            touch --reference="${FILE}" "${OUTFILE}"
+        esac
+    fi
+    echo -n "${OUTFILE}"
+}
+
 # Parse command-line and end with success
 parseargs "$@"
 true

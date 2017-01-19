@@ -110,18 +110,7 @@ if [[ -s ${STORE_LARGE} ]] ; then
     while read INFILE ; do
         echo "Storing ${INFILE}..."
         SHA=$(shasum ${INFILE} | cut -d ' ' -f 1)
-        OUTFILE=${DATA_DIR}/${SHA:1:3}/${SHA:4:3}/$(basename "${INFILE}")
-        mkdir -p $(dirname "${OUTFILE}")
-        case "${INFILE}" in
-        *.7z | *.bz2 | *.gz | *.?ar | *.lz* | *.lha | *.tgz | *.xz | *.z | *.zip | *.zoo | \
-        *.dmg | *.gif | *.jpg | *.mp4 | *.web* | *.wmv )
-            cp -a "${INFILE}" "${OUTFILE}"
-            ;;
-        *)
-            OUTFILE="${OUTFILE}.xz"
-            xz --stdout "${INFILE}" > "${OUTFILE}"
-            touch --reference="${INFILE}" "${OUTFILE}"
-        esac
+        OUTFILE=$(largefile_store "${MIXTAPE_DIR}" "${INFILE}" "${SHA}")
         printf "%s\t%s\t%s\n" "${INFILE}" "${SHA}" "${OUTFILE#${DATA_DIR}/}" >> ${STORE_UNSORTED}
     done < ${STORE_LARGE}
 fi
