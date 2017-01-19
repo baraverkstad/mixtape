@@ -85,6 +85,38 @@ test_index_list() {
     assert "index_list ${DIR} 2016-*" ""
 }
 
+# Tests the index_content function
+test_index_content() {
+    local DIR=${TEST_DIR}/mixtape
+    local IX1="${DIR}/index/index.2017-01-18-0826.txt.xz"
+    assert "index_content ${IX1} | wc -l" "6"
+    assert "index_content ${IX1} | awk -F'\t' '{print NF; exit}'" "9"
+    assert "index_content ${IX1} | awk -F'\t' '{print \$1; exit}'" "@587f2698"
+    assert "index_content ${IX1} / | wc -l" "6"
+    assert "index_content ${IX1} README | wc -l" "1"
+    assert "index_content ${IX1} 'unsplash*.jpg' | wc -l" "1"
+    assert "index_content ${IX1} 'test*.jpg' | wc -l" "0"
+    assert "index_content ${IX1} 'test**.jpg' | wc -l" "1"
+    assert "index_content ${IX1} '?.file.txt' | wc -l" "1"
+    assert "index_content ${IX1} '??.file.txt' | wc -l" "0"
+}
+
+# Tests the index_content_regex function
+test_index_content_regex() {
+    # Assert uses echo -e for results, so extra '\\' needed
+    assert "index_content_regex" '\\t/'
+    assert "index_content_regex '*'" '\\t/'
+    assert "index_content_regex '**'" '\\t/'
+    assert "index_content_regex /" '\\t/'
+    assert "index_content_regex root" '\\t/[^\\t]*root'
+    assert "index_content_regex '*root*'" '\\t/[^\\t]*root'
+    assert "index_content_regex '/root**'" '\\t/root'
+    assert "index_content_regex 'unsplash*.jpg'" '\\t/[^\\t]*unsplash[^/\\t]*\\.jpg'
+    assert "index_content_regex 'test**.jpg'" '\\t/[^\\t]*test[^\\t]*\\.jpg'
+    assert "index_content_regex '?.file.txt'" '\\t/[^\\t]*[^/\\t]\\.file\\.txt'
+    assert "index_content_regex '??.file.txt'" '\\t/[^\\t]*[^/\\t][^/\\t]\\.file\\.txt'
+}
+
 # Program start
 main() {
     local FUNC

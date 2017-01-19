@@ -247,29 +247,56 @@ index_list() {
     fi
 }
 
-# Prints contents of an index (optionally filtered by a file regex)
+# Prints contents of an index (optionally filtered by a file glob)
 index_content() {
-    local INDEX="$1" MATCH="${2:-}" PREFIX
+    local INDEX="$1" GLOB="${2:-}" PREFIX FILTER="cat" REGEX
     PREFIX=$(index_epoch ${INDEX})$'\t'
-    if [[ -z ${MATCH} ]] ; then
-        xzcat ${INDEX} | \
-            awk -v prefix="${PREFIX}" '$0 = prefix$0' || \
-            true
-    else
-        xzcat ${INDEX} | \
-            awk -F $'\t' -v IGNORECASE=1 \
-                -v regex="${MATCH}" -v prefix="${PREFIX}" \
-                "\$6 ~ regex { print prefix \$0 }" || \
-            true
+    if [[ -n "${GLOB}" ]] ; then
+        REGEX=$(index_content_regex "${GLOB}")
+        FILTER="grep -i -P ${REGEX}"
     fi
+    xzcat ${INDEX} | ${FILTER} | awk -v prefix="${PREFIX}" '$0 = prefix$0' || true
 }
 
-# Prints contents for all indices (optionally filtered by a grep regex)
+# Prints contents for all indices (optionally filtered by a file glob)
 index_all_content() {
     local DIR="$1" MATCH="${2:-}" INDEX
     for INDEX in ${DIR}/index/*.xz ; do
         index_content ${INDEX} "${MATCH}"
     done
+}
+
+# Converts a file glob pattern to a regex for matching index content
+index_content_regex() {
+    local GLOB="${1:-}" RE=('\t') ANY='[^\t]' DOT='[^/\t]' HASANY=false POS CHR
+    if [[ "${GLOB:0:1}" != "/" ]] ; then
+        RE+=("/" "${ANY}*")
+        HASANY=true
+    fi
+    for POS in $(seq 1 ${#GLOB}) ; do
+        CHR="${GLOB:POS-1:1}"
+        if [[ "${GLOB:POS-1:2}" == "**" ]] ; then
+            RE+=("${ANY}*")
+            HASANY=true
+        elif [[ "${CHR}" == "*" ]] ; then
+            if ! ${HASANY} ; then
+                RE+=("${DOT}*")
+            fi
+        elif [[ "${CHR}" == "?" ]] ; then
+            RE+=("${DOT}")
+            HASANY=false
+        else
+            if [[ '.+[]{}' == *"${CHR}"* ]] ; then
+                RE+=("\\")
+            fi
+            RE+=("${CHR}")
+            HASANY=false
+        fi
+    done
+    while [[ "${RE[-1]}" == "${ANY}*" || "${RE[-1]}" == "${DOT}*"  ]] ; do
+        unset 'RE[-1]'
+    done
+    (IFS=; echo -n "${RE[*]}")
 }
 
 # Parse command-line and end with success

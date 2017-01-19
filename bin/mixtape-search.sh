@@ -5,7 +5,9 @@
 # Syntax: mixtape-search [--all] <pattern>
 #
 # Arguments:
-#   <pattern>        A regex search pattern (i.e. '.' for any char)
+#   <pattern>        A file name search pattern with optional glob matching
+#                    (e.g. "/etc/**/*.sh). Take care to avoid shell expansion
+#                    of the pattern by using quotes (i.e. 'pattern').
 #
 # Options:
 #   --all            Print all matching backups (not only first)
@@ -54,8 +56,8 @@ main() {
     if parseopt --all ; then
         FILTER="cat"
     fi
-    [[ ${#ARGS[@]} -gt 0 ]] || usage
-    PATTERN="${ARGS[@]}"
+    [[ ${#ARGS[@]} -eq 1 ]] || usage
+    PATTERN="${ARGS[0]}"
     index_all_content "${MIXTAPE_DIR}" "${PATTERN}" | \
         sort --field-separator=$'\t' --key=7,7 --key=1,1 | \
         ${FILTER} | \

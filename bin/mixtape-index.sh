@@ -77,7 +77,7 @@ main() {
         ${FIRST} || [[ -z "${FILEPATH}" ]] || echo
         index_info "${INDEX_FILE}"
         if [[ -n "${FILEPATH}" ]] ; then
-            index_content "${INDEX_FILE}" "^${FILEPATH}" | index_content_print ${FORMAT}
+            index_content "${INDEX_FILE}" "${FILEPATH}" | index_content_print ${FORMAT}
         fi
         FIRST=false
     done
