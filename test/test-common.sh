@@ -117,6 +117,17 @@ test_index_content_regex() {
     assert "index_content_regex '??.file.txt'" '\\t/[^\\t]*[^/\\t][^/\\t]\\.file\\.txt'
 }
 
+# Tests the largefile_search_sha function
+test_largefile_search_sha() {
+    DIR=${TEST_DIR}/mixtape
+    SHA1="bfff4213a7adcb1c33e76f78484a167fe2848113"
+    SHA2="eb7faf0b51528980753879c8e51d1f59e0e9c630"
+    SHA3="43cca6b738ba9a1f3d86875a21cdbb419cbdd5f1"
+    assert "largefile_search_sha ${DIR} ${SHA1}" "${DIR}/data/bff/f42/unsplash#1015-2048x1536.jpg"
+    assert "largefile_search_sha ${DIR} ${SHA2}" "${DIR}/data/eb7/faf/loremipsum.txt.xz"
+    assert "largefile_search_sha ${DIR} ${SHA3}" ""
+}
+
 # Program start
 main() {
     local FUNC
