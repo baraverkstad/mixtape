@@ -2,15 +2,21 @@
 #
 # Searches for matching files in the backup.
 #
-# Syntax: mixtape-search [--all] <pattern>
+# Syntax: mixtape-search [<options>] <file>
 #
 # Arguments:
-#   <pattern>        A file name search pattern with optional glob matching
-#                    (e.g. "/etc/**/*.sh). Take care to avoid shell expansion
-#                    of the pattern by using quotes (i.e. 'pattern').
+#   <file>           A file name or path search pattern with optional glob
+#                    matching (e.g. "/etc/**/*.sh). Avoid shell expansion of
+#                    the pattern by using quotes (i.e. "pattern"). A pattern
+#                    starting with "/" will match from the beginning of the
+#                    file path (i.e. an absolute file path).
 #
 # Options:
-#   --all            Print all matching backups (not only first)
+#   --first          Prints meta-data from the first backup of each version of
+#                    the files matched (this is the default).
+#   --last           Prints meta-data from the last backup of each version of
+#                    the files matched.
+#   --all            Prints meta-data from all backups of the files matched.
 #
 
 # Import common functions
@@ -51,15 +57,18 @@ index_print() {
 
 # Program start
 main() {
-    local FILTER="uniq -f 6" PATTERN FILTER OPT FILE
-    checkopts --all
+    local FILTER="uniq -f 6" SORTKEY="1,1" FILEGLOB
+    checkopts --first --last --all
+    if parseopt --last ; then
+        SORTKEY="1,1r"
+    fi
     if parseopt --all ; then
         FILTER="cat"
     fi
     [[ ${#ARGS[@]} -eq 1 ]] || usage
-    PATTERN="${ARGS[0]}"
-    index_all_content "${MIXTAPE_DIR}" "${PATTERN}" | \
-        sort --field-separator=$'\t' --key=7,7 --key=1,1 | \
+    FILEGLOB="${ARGS[0]}"
+    index_all_content "${MIXTAPE_DIR}" "${FILEGLOB}" | \
+        sort --field-separator=$'\t' --key=7,7 --key=${SORTKEY} | \
         ${FILTER} | \
         sort --field-separator=$'\t' --key=7,7 --key=1,1r | \
         index_print
