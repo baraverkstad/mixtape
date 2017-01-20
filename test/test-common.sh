@@ -74,12 +74,13 @@ test_index_epoch() {
 test_index_list() {
     local DIR=${TEST_DIR}/mixtape
     local IX1="${DIR}/index/index.2017-01-19-0846.txt.xz"
-    assert "index_list ${DIR}" "${IX1}"
+    local IX2="${DIR}/index/index.2017-01-20-1149.txt.xz"
+    assert "index_list ${DIR}" "${IX1} ${IX2}"
     assert "index_list ${DIR} @58807cc8" "${IX1}"
-    assert "index_list ${DIR} all" "${IX1}"
+    assert "index_list ${DIR} all" "${IX1} ${IX2}"
     assert "index_list ${DIR} first" "${IX1}"
-    assert "index_list ${DIR} last" "${IX1}"
-    assert "index_list ${DIR} 2017-*" "${IX1}"
+    assert "index_list ${DIR} last" "${IX2}"
+    assert "index_list ${DIR} 2017-*" "${IX1} ${IX2}"
     assert "index_list ${DIR} 0?-19" "${IX1}"
     assert "index_list ${DIR} @187f2698" ""
     assert "index_list ${DIR} 2016-*" ""
