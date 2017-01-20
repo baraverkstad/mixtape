@@ -369,9 +369,10 @@ largefile_restore() {
         mkdir -p "${DIR}"
     fi
     if [[ "${SRC}" == *.xz && "${SRC: -3}" != "${DST: -3}" ]] ; then
-        xzcat "${SRC}" > "${DST}"
+        cp -a "${SRC}" "${DST}.xz"
+        unxz "${DST}.xz"
     else
-        cp "${SRC}" "${DST}"
+        cp -a "${SRC}" "${DST}"
     fi
 }
 

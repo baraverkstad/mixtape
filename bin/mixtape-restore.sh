@@ -17,6 +17,7 @@ SCRIPT=$(readlink $0 || echo -n $0)
 LIBRARY=$(dirname ${SCRIPT})/mixtape-common.sh
 source ${LIBRARY} || exit 1
 
+# Restores files from a backup (listed in tar file order)
 restore_files() {
     local DIR="$1" TARFILE="" FILES
     local INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION
@@ -24,7 +25,11 @@ restore_files() {
     cd ${DIR}
     FILES=${TMP_DIR}/files.txt
     while IFS=$'\t' read INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
-        if [[ ${ACCESS:0:1} == "-" ]] ; then
+        if [[ ${ACCESS:0:1} == "d" && ! -e "${FILE:1}" ]] ; then
+            mkdir -p "${FILE:1}"
+        elif [[ ${ACCESS:0:1} == "l" ]] ; then
+            ln -s "${LOCATION}" "${FILE:1}"
+        elif [[ ${ACCESS:0:1} == "-" ]] ; then
             if [[ ${LOCATION:0:6} != "files/" ]] ; then
                 largefile_restore "${MIXTAPE_DIR}/data/${LOCATION}" "${FILE:1}"
             elif [[ "${TARFILE}" != "${LOCATION}" ]] ; then
@@ -44,12 +49,18 @@ restore_files() {
     rm -rf ${TMP_DIR}
 }
 
+# Restores file metadata (user, group, permissions) from a backup
 restore_meta() {
+    local DIR="$1" DST
     local INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION
     while IFS=$'\t' read INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
-        true
+        DST="${DIR}/${FILE:1}"
+        if [[ -e "${DST}" ]] ; then
+            chmod "$(file_access_octal ${ACCESS})" "${DST}"
+            chown "${USER}:${GROUP}" "${DST}"
+            touch --no-dereference --date="${DATETIME}" "${DST}"
+        fi
     done
-    warn "empty directories, symlinks and file meta-data not restored (yet)"
 }
 
 # Program start
