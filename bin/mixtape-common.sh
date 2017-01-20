@@ -299,6 +299,26 @@ index_content_regex() {
     (IFS=; echo -n "${RE[*]}")
 }
 
+# Prints file bits as the corresponding octal code
+file_access_octal() {
+    local ACCESS=$1 PERM="0" POS SUBSTR DIGIT
+    for POS in $(seq 1 3 7) ; do
+        DIGIT=0
+        SUBSTR="${ACCESS:POS:3}"
+        if [[ "${SUBSTR}" == r?? ]] ; then
+            ((DIGIT+=4))
+        fi
+        if [[ "${SUBSTR}" == ?w? ]] ; then
+            ((DIGIT+=2))
+        fi
+        if [[ "${SUBSTR}" == ??x ]] ; then
+            ((DIGIT+=1))
+        fi
+        PERM+="${DIGIT}"
+    done
+    echo -n "${PERM}"
+}
+
 # Searches for a file by SHA in the large file store
 largefile_search_sha() {
     local DIR=$1 SHA=$2 FILE FILESHA SUBSTR

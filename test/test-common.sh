@@ -118,6 +118,22 @@ test_index_content_regex() {
     assert "index_content_regex '??.file.txt'" '\\t/[^\\t]*[^/\\t][^/\\t]\\.file\\.txt'
 }
 
+# Tests the file_access_octal function
+test_file_access_octal() {
+    # read (4), write (2), and execute (1)
+    assert "file_access_octal '----------'" "0000"
+    assert "file_access_octal '-r--r--r--'" "0444"
+    assert "file_access_octal '--w--w--w-'" "0222"
+    assert "file_access_octal '---x--x--x'" "0111"
+    assert "file_access_octal '-rw-r--r--'" "0644"
+    assert "file_access_octal '-rw-rw-rw-'" "0666"
+    assert "file_access_octal 'drwx------'" "0700"
+    assert "file_access_octal 'drwxr-xr-x'" "0755"
+    assert "file_access_octal 'drwxrwxrwx'" "0777"
+    assert "file_access_octal ''" "0000"
+    assert "file_access_octal '-r--'" "0400"
+}
+
 # Tests the largefile_search_sha function
 test_largefile_search_sha() {
     DIR=${TEST_DIR}/mixtape
