@@ -223,19 +223,19 @@ index_epoch() {
 
 # Prints matching (and existing) index files for a backup dir
 index_list() {
-    local DIR="$1" MATCH="${2:-}" GLOB FILES POS
-    if [[ ${MATCH:0:1} = "@" ]] ; then
-        GLOB=$(index_datetime ${MATCH} file)
-    elif [[ ${MATCH} = "all" || ${MATCH} = "*" ]] ; then
+    local DIR="$1" INDEX="${2:-}" GLOB FILES POS
+    if [[ ${INDEX:0:1} = "@" ]] ; then
+        GLOB=$(index_datetime ${INDEX} file)
+    elif [[ ${INDEX} = "all" || ${INDEX} = "*" ]] ; then
         GLOB="*"
-    elif [[ ${MATCH} = "first" ]] ; then
+    elif [[ ${INDEX} = "first" ]] ; then
         GLOB="*"
         POS=0
-    elif [[ ${MATCH} = "last" ]] ; then
+    elif [[ ${INDEX} = "last" ]] ; then
         GLOB="*"
         POS=-1
-    elif [[ -n ${MATCH} ]] ; then
-        GLOB=$(echo -n \*${MATCH}\* | tr ' ' '-' | tr -d ':')
+    elif [[ -n ${INDEX} ]] ; then
+        GLOB=$(echo -n \*${INDEX}\* | tr ' ' '-' | tr -d ':')
     else
         GLOB="*"
     fi
