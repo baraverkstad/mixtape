@@ -67,7 +67,7 @@ main() {
     fi
     [[ ${#ARGS[@]} -eq 1 ]] || usage "incorrect number of arguments"
     FILEGLOB="${ARGS[0]}"
-    index_all_content "${MIXTAPE_DIR}" "${FILEGLOB}" | \
+    index_content "${MIXTAPE_DIR}" all "${FILEGLOB}" | \
         sort --field-separator=$'\t' --key=7,7 --key=${SORTKEY} | \
         ${FILTER} | \
         sort --field-separator=$'\t' --key=7,7 --key=1,1r | \

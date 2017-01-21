@@ -260,22 +260,16 @@ index_files() {
     fi
 }
 
-# Prints contents of an index (optionally filtered by a file glob)
+# Prints contents of one of more indices (optionally filtered by a file glob)
 index_content() {
-    local INDEX="$1" GLOB="${2:-}" PREFIX FILTER="cat" REGEX
-    PREFIX=$(index_epoch ${INDEX})$'\t'
+    local DIR="$1" INDEX="$2" GLOB="${3:-}" PREFIX FILTER="cat" REGEX
     if [[ -n "${GLOB}" ]] ; then
         REGEX=$(index_content_regex "${GLOB}")
         FILTER="grep -i -P ${REGEX}"
     fi
-    xzcat ${INDEX} | ${FILTER} | awk -v prefix="${PREFIX}" '$0 = prefix$0' || true
-}
-
-# Prints contents for all indices (optionally filtered by a file glob)
-index_all_content() {
-    local DIR="$1" MATCH="${2:-}" INDEX
-    for INDEX in ${DIR}/index/*.xz ; do
-        index_content ${INDEX} "${MATCH}"
+    for INDEX_FILE in $(index_files "${DIR}" "${INDEX}") ; do
+        PREFIX=$(index_epoch ${INDEX_FILE})$'\t'
+        xzcat ${INDEX_FILE} | ${FILTER} | awk -v prefix="${PREFIX}" '$0 = prefix$0' || true
     done
 }
 

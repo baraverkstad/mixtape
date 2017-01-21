@@ -84,10 +84,10 @@ main() {
     echo "Restoring ${FILEGLOB}"
     echo "     from ${INDEX_FILE}"
     echo "       to ${DIR}${COLOR_RESET}"
-    index_content "${INDEX_FILE}" "${FILEGLOB}" | \
+    index_content "${MIXTAPE_DIR}" "${INDEX_FILE}" "${FILEGLOB}" | \
         sort --field-separator=$'\t' --key=9,9 --key=7,7 | \
         restore_files "${DIR}"
-    index_content "${INDEX_FILE}" "${FILEGLOB}" | \
+    index_content "${MIXTAPE_DIR}" "${INDEX_FILE}" "${FILEGLOB}" | \
         sort --field-separator=$'\t' --key=7,7r | \
         restore_meta "${DIR}"
 }

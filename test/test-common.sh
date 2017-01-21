@@ -92,16 +92,19 @@ test_index_files() {
 test_index_content() {
     local DIR=${TEST_DIR}/mixtape
     local IX1="${DIR}/index/index.2017-01-19-0846.txt.xz"
-    assert "index_content ${IX1} | wc -l" "7"
-    assert "index_content ${IX1} | awk -F'\t' '{print NF; exit}'" "9"
-    assert "index_content ${IX1} | awk -F'\t' '{print \$1; exit}'" "@58807cc8"
-    assert "index_content ${IX1} / | wc -l" "7"
-    assert "index_content ${IX1} README | wc -l" "1"
-    assert "index_content ${IX1} 'unsplash*.jpg' | wc -l" "1"
-    assert "index_content ${IX1} 'test*.jpg' | wc -l" "0"
-    assert "index_content ${IX1} 'test**.jpg' | wc -l" "1"
-    assert "index_content ${IX1} '?.file.txt' | wc -l" "1"
-    assert "index_content ${IX1} '??.file.txt' | wc -l" "0"
+    assert "index_content ${DIR} ${IX1} | wc -l" "7"
+    assert "index_content ${DIR} ${IX1} | awk -F'\t' '{print NF; exit}'" "9"
+    assert "index_content ${DIR} ${IX1} | awk -F'\t' '{print \$1; exit}'" "@58807cc8"
+    assert "index_content ${DIR} ${IX1} / | wc -l" "7"
+    assert "index_content ${DIR} ${IX1} README | wc -l" "1"
+    assert "index_content ${DIR} ${IX1} 'unsplash*.jpg' | wc -l" "1"
+    assert "index_content ${DIR} ${IX1} 'test*.jpg' | wc -l" "0"
+    assert "index_content ${DIR} ${IX1} 'test**.jpg' | wc -l" "1"
+    assert "index_content ${DIR} ${IX1} '?.file.txt' | wc -l" "1"
+    assert "index_content ${DIR} ${IX1} '??.file.txt' | wc -l" "0"
+    assert "index_content ${DIR} all 'a.file.txt' | wc -l" "2"
+    assert "index_content ${DIR} all '?.file.txt' | wc -l" "3"
+    assert "index_content ${DIR} all '??.file.txt' | wc -l" "0"
 }
 
 # Tests the index_content_regex function
