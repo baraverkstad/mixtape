@@ -32,6 +32,20 @@ test_parseargs() {
     assert_raises "parseopt --unset" 1
 }
 
+# Tests the tmpfile_create and tmpfile_cleanup functions
+test_tmpfile_create() {
+    local FILE
+    assert_raises "[[ -d ${TMP_DIR} ]]" 1
+    FILE=$(tmpfile_create)
+    assert_raises "[[ -d ${TMP_DIR} ]]" 0
+    assert_raises "[[ -f ${FILE} ]]" 0
+    assert_raises "[[ ${FILE} == ${TMP_DIR}/tmp.????.txt ]]" 0
+    FILE=$(tmpfile_create test.bin)
+    assert_raises "[[ ${FILE} == ${TMP_DIR}/test.????.bin ]]" 0
+    assert_raises "tmpfile_cleanup" 0
+    assert_raises "[[ -d ${TMP_DIR} ]]" 1
+}
+
 # Tests the is_mixtape_dir function
 test_is_mixtape_dir() {
     assert "is_mixtape_dir ${TEST_DIR}/mixtape" ""

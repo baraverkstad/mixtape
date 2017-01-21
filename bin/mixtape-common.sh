@@ -181,6 +181,24 @@ parseopt() {
     fi
 }
 
+# Creates a unique empty file in TMP_DIR
+tmpfile_create() {
+    local NAME=${1:-tmp.txt} TPL EXT
+    if [[ ! -d ${TMP_DIR} ]] ; then
+        mkdir -p ${TMP_DIR}
+    fi
+    TPL="${NAME%.*}.XXXX"
+    EXT="${NAME##*.}"
+    mktemp -p ${TMP_DIR} --suffix=.${EXT:-txt} ${TPL}
+}
+
+# Removes all files in TMP_DIR (and directory itself)
+tmpfile_cleanup() {
+    if [[ -d ${TMP_DIR} ]] ; then
+        rm -rf ${TMP_DIR}
+    fi
+}
+
 # Checks if a directory looks like a valid backup dir
 is_mixtape_dir() {
     local DIR=$1
@@ -383,6 +401,7 @@ largefile_restore() {
     fi
 }
 
-# Parse command-line and end with success
+# Parse command-line, trap exit and end with success
 parseargs "$@"
+trap tmpfile_cleanup EXIT
 true

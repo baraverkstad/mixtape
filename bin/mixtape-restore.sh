@@ -21,9 +21,9 @@ source ${LIBRARY} || exit 1
 restore_files() {
     local DIR="$1" TARFILE="" FILES
     local INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION
-    mkdir -p ${DIR} ${TMP_DIR}
+    mkdir -p ${DIR}
     cd ${DIR}
-    FILES=${TMP_DIR}/files.txt
+    FILES=$(tmpfile_create files.txt)
     while IFS=$'\t' read INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
         if [[ ${ACCESS:0:1} == "d" && ! -e "${FILE:1}" ]] ; then
             mkdir -p "${FILE:1}"
@@ -46,7 +46,6 @@ restore_files() {
     if [[ -n "${TARFILE}" ]] ; then
         tar -xf "${MIXTAPE_DIR}/data/${TARFILE}" -T "${FILES}"
     fi
-    rm -rf ${TMP_DIR}
 }
 
 # Restores file metadata (user, group, permissions) from a backup
