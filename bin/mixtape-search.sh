@@ -2,9 +2,13 @@
 #
 # Searches for matching files in the backup.
 #
-# Syntax: mixtape-search [<options>] <file>
+# Syntax: mixtape-search [<options>] [<index>] <file>
 #
 # Arguments:
+#   <index>          An optional index id (e.g. "@586efbc4"), named search
+#                    (e.g. "all", "first", "last") or partial timestamp (e.g.
+#                    "2017-01") with optional glob matching (e.g. "20??-*-01").
+#                    If not specified, "all" is assumed.
 #   <file>           A file name or path search pattern with optional glob
 #                    matching (e.g. "/etc/**/*.sh). Avoid shell expansion of
 #                    the pattern by using quotes (i.e. "pattern"). A pattern
@@ -57,7 +61,7 @@ index_print() {
 
 # Program start
 main() {
-    local FILTER="uniq -f 6" SORTKEY="1,1" FILEGLOB
+    local FILTER="uniq -f 6" SORTKEY="1,1" INDEX FILEGLOB
     checkopts --first --last --all
     if parseopt --last ; then
         SORTKEY="1,1r"
@@ -65,9 +69,19 @@ main() {
     if parseopt --all ; then
         FILTER="cat"
     fi
-    [[ ${#ARGS[@]} -eq 1 ]] || usage "incorrect number of arguments"
-    FILEGLOB="${ARGS[0]}"
-    index_content "${MIXTAPE_DIR}" all "${FILEGLOB}" | \
+    [[ ${#ARGS[@]} -ge 1 ]] || usage "too few arguments"
+    [[ ${#ARGS[@]} -le 2 ]] || usage "too many arguments"
+    if [[ ${#ARGS[@]} -eq 1 ]] ; then
+        INDEX="all"
+        FILEGLOB="${ARGS[0]}"
+    else
+        INDEX="${ARGS[0]}"
+        FILEGLOB="${ARGS[1]}"
+    fi
+    if [[ -z $(index_files "${MIXTAPE_DIR}" "${INDEX}") ]] ; then
+        warn "no matching index was found: ${INDEX}"
+    fi
+    index_content "${MIXTAPE_DIR}" "${INDEX}" "${FILEGLOB}" | \
         sort --field-separator=$'\t' --key=7,7 --key=${SORTKEY} | \
         ${FILTER} | \
         sort --field-separator=$'\t' --key=7,7 --key=1,1r | \

@@ -89,7 +89,7 @@ main() {
         FIRST=false
     done
     if [[ -z "${INDEX_FILE:-}" && ${INDEX} != "all" ]] ; then
-        warn "No matching index was found: ${INDEX}"
+        warn "no matching index was found: ${INDEX}"
     fi
 }
 
