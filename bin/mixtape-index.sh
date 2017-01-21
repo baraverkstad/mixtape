@@ -67,7 +67,7 @@ main() {
     if parseopt --long ; then
         FORMAT="long"
     fi
-    [[ ${#ARGS[@]} -le 2 ]] || usage
+    [[ ${#ARGS[@]} -le 2 ]] || usage "too many arguments"
     INDEX="${ARGS[0]:-}"
     FILEPATH="${ARGS[1]:-}"
     if [[ -n "${FILEPATH}" && "${FILEPATH:0:1}" != "/" ]] ; then

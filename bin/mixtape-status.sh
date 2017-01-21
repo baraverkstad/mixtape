@@ -74,8 +74,8 @@ print_disk_usage() {
 
 # Program start
 main() {
-    [[ ${#ARGS[@]} -eq 0 ]] || usage
-    [[ ${#OPTS[@]} -eq 0 ]] || usage
+    checkopts
+    [[ ${#ARGS[@]} -eq 0 ]] || usage "too many arguments"
     if [[ ${MIXTAPE_DIR} != ${DEFAULT_MIXTAPE_DIR} ]] ; then
         print_mixtape_status ${MIXTAPE_DIR}
     else

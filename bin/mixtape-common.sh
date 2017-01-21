@@ -66,14 +66,18 @@ log() {
 
 # Prints command-line usage info and exits
 usage() {
-    local LINE
+    local ERROR="$@" LINE
     while read LINE ; do
         if [[ ${LINE:0:1} = "#" ]] ; then
-            echo "${LINE:2}"
+            echo "${LINE:2}" >&2
         else
             break
         fi
     done < <(tail -n +3 $PROGRAM)
+    if [[ ! -z "${ERROR}" ]] ; then
+        [[ -z "${LINE:2}" ]] || echo >&2
+        error "${ERROR}"
+    fi
     exit 1
 }
 
@@ -132,16 +136,19 @@ parseargs() {
 
 # Checks OPTS content against the function arguments
 checkopts() {
-    local OPTIONS OPT
-    OPTIONS=" $* "
+    local OPTIONS=" $* " OPT MATCH MISMATCH
     for OPT in ${OPTS+"${OPTS[@]}"} ; do
         if [[ "${OPT}" == *=* ]] ; then
-            OPT="${OPT%%=*}="
+            MATCH=" ${OPT%%=*}="
+            MISMATCH=" ${OPT%%=*} "
         else
-            OPT="${OPT} "
+            MATCH=" ${OPT} "
+            MISMATCH=" ${OPT}="
         fi
-        if [[ ${OPTIONS} != *${OPT}* ]] ; then
-            usage
+        if [[ ${OPTIONS} == *${MISMATCH}* ]] ; then
+            usage "option value incorrect: ${OPT}"
+        elif [[ ${OPTIONS} != *${MATCH}* ]] ; then
+            usage "unknown option: ${OPT}"
         fi
     done
 }
@@ -156,13 +163,13 @@ parseopt() {
                 echo -n "${OPT#*=}"
                 return 0
             elif [[ ${DEF} == ${NAME} ]] ; then
-                usage
+                usage "option cannot have value: ${OPT}"
             fi
         else
             if [[ ${DEF} == ${OPT} ]] ; then
                 return 0
             elif [[ ${DEF} == ${OPT}=* ]] ; then
-                usage
+                usage "option requires value: ${OPT}"
             fi
         fi
     done

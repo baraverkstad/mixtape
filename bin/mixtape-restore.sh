@@ -66,8 +66,8 @@ restore_meta() {
 # Program start
 main() {
     local INDEX FILEGLOB INDEX_FILE DIR
-    [[ ${#ARGS[@]} -eq 2 ]] || usage
-    [[ ${#OPTS[@]} -eq 0 ]] || usage
+    checkopts
+    [[ ${#ARGS[@]} -eq 2 ]] || usage "incorrect number of arguments"
     INDEX="${ARGS[0]}"
     FILEGLOB="${ARGS[1]}"
     INDEX_FILE=($(index_list "${MIXTAPE_DIR}" "${INDEX}"))

@@ -65,7 +65,7 @@ main() {
     if parseopt --all ; then
         FILTER="cat"
     fi
-    [[ ${#ARGS[@]} -eq 1 ]] || usage
+    [[ ${#ARGS[@]} -eq 1 ]] || usage "incorrect number of arguments"
     FILEGLOB="${ARGS[0]}"
     index_all_content "${MIXTAPE_DIR}" "${FILEGLOB}" | \
         sort --field-separator=$'\t' --key=7,7 --key=${SORTKEY} | \

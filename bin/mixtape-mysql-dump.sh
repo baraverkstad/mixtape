@@ -21,7 +21,7 @@ OPTIONS="--opt --quote-names --skip-add-locks --skip-lock-tables"
 EXTRAS=""
 
 # Handle command-line arguments
-[[ ${#ARGS[@]} -gt 0 ]] || usage
+[[ ${#ARGS[@]} -gt 0 ]] || usage "too few arguments"
 if [[ ${#OPTS[@]} -gt 0 ]] ; then
     EXTRAS="${OPTS[@]}"
 fi
