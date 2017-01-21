@@ -11,7 +11,7 @@ set -o pipefail
 
 # Program & version variables
 PROGRAM=$0
-PROGRAM_NAME=$(basename ${PROGRAM} .sh)
+PROGRAM_NAME=${PROGRAM%.sh}
 PROGRAM_ID=${PROGRAM_NAME}[$$]
 VERSION=0.3
 
@@ -352,8 +352,8 @@ largefile_store() {
     fi
     OUTFILE=$(largefile_search_sha "${DIR}" "${SHA}")
     if [[ ! -e "${OUTFILE}" ]] ; then
-        OUTFILE=${DIR}/data/${SHA:0:3}/${SHA:3:3}/$(basename "${FILE}")
-        mkdir -p $(dirname "${OUTFILE}")
+        OUTFILE=${DIR}/data/${SHA:0:3}/${SHA:3:3}/${FILE##*/}
+        mkdir -p "${OUTFILE%/*}"
         case "${FILE}" in
         *.7z | *.bz2 | *.gz | *.?ar | *.lz* | *.lha | *.tgz | *.xz | *.z | *.zip | *.zoo | \
         *.dmg | *.gif | *.jpg | *.mp4 | *.web* | *.wmv )
