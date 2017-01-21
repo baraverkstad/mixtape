@@ -2,7 +2,7 @@
 #
 # Lists indices in the backup, and optionally their content files.
 #
-# Syntax: mixtape-index [--long] [<index>] [<path>]
+# Syntax: mixtape-list [--long] [<index>] [<path>]
 #
 # Arguments:
 #   <index>          The optional index id (e.g. "@586efbc4"), named search
@@ -70,7 +70,7 @@ main() {
         FORMAT="long"
     fi
     [[ ${#ARGS[@]} -le 2 ]] || usage "too many arguments"
-    if [[ ${#ARGS[@]} == 1 && ${ARGS[0]:0:1} == "/" ]] ; then
+    if [[ ${#ARGS[@]} -eq 1 && ${ARGS[0]:0:1} == "/" ]] ; then
         INDEX="last"
         FILEPATH="${ARGS[0]:-}"
     else
