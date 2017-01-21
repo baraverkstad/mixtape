@@ -2,12 +2,14 @@
 #
 # Lists indices in the backup, and optionally their content files.
 #
-# Syntax: mixtape-index [--long] [<index> [<path>]]
+# Syntax: mixtape-index [--long] [<index>] [<path>]
 #
 # Arguments:
 #   <index>          The optional index id (e.g. "@586efbc4"), named search
 #                    (e.g. "all", "first", "last") or partial timestamp (e.g.
-#                    "2017-01") with optional glob matching (e.g. "20??-*-01")
+#                    "2017-01") with optional glob matching (e.g. "20??-*-01").
+#                    If no file path is specified, "all" is assumed. Otherwise
+#                    "last" is used.
 #   <path>           The optional file path for listing index content. Use "/"
 #                    to show all files. An initial "/" char will be added if
 #                    missing.
@@ -68,8 +70,13 @@ main() {
         FORMAT="long"
     fi
     [[ ${#ARGS[@]} -le 2 ]] || usage "too many arguments"
-    INDEX="${ARGS[0]:-}"
-    FILEPATH="${ARGS[1]:-}"
+    if [[ ${#ARGS[@]} == 1 && ${ARGS[0]:0:1} == "/" ]] ; then
+        INDEX="last"
+        FILEPATH="${ARGS[0]:-}"
+    else
+        INDEX="${ARGS[0]:-all}"
+        FILEPATH="${ARGS[1]:-}"
+    fi
     if [[ -n "${FILEPATH}" && "${FILEPATH:0:1}" != "/" ]] ; then
         FILEPATH="/${FILEPATH}"
     fi
@@ -81,6 +88,9 @@ main() {
         fi
         FIRST=false
     done
+    if [[ -z "${INDEX_FILE:-}" && ${INDEX} != "all" ]] ; then
+        warn "No matching index was found: ${INDEX}"
+    fi
 }
 
 main
