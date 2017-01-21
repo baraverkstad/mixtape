@@ -70,20 +70,22 @@ test_index_epoch() {
     assert "index_epoch '2017-01-16 02:07'" "@587c2ac4"
 }
 
-# Tests the index_list function
-test_index_list() {
+# Tests the index_files function
+test_index_files() {
     local DIR=${TEST_DIR}/mixtape
     local IX1="${DIR}/index/index.2017-01-19-0846.txt.xz"
     local IX2="${DIR}/index/index.2017-01-20-1149.txt.xz"
-    assert "index_list ${DIR}" "${IX1} ${IX2}"
-    assert "index_list ${DIR} @58807cc8" "${IX1}"
-    assert "index_list ${DIR} all" "${IX1} ${IX2}"
-    assert "index_list ${DIR} first" "${IX1}"
-    assert "index_list ${DIR} last" "${IX2}"
-    assert "index_list ${DIR} 2017-*" "${IX1} ${IX2}"
-    assert "index_list ${DIR} 0?-19" "${IX1}"
-    assert "index_list ${DIR} @187f2698" ""
-    assert "index_list ${DIR} 2016-*" ""
+    assert "index_files ${DIR}" "${IX1} ${IX2}"
+    assert "index_files ${DIR} @58807cc8" "${IX1}"
+    assert "index_files ${DIR} all" "${IX1} ${IX2}"
+    assert "index_files ${DIR} first" "${IX1}"
+    assert "index_files ${DIR} last" "${IX2}"
+    assert "index_files ${DIR} 2017-*" "${IX1} ${IX2}"
+    assert "index_files ${DIR} 0?-19" "${IX1}"
+    assert "index_files ${DIR} @187f2698" ""
+    assert "index_files ${DIR} 2016-*" ""
+    assert "index_files ${DIR} ${IX1}" "${IX1}"
+    assert "index_files ${DIR} index.2017-01-20-1149.txt.xz" "${IX2}"
 }
 
 # Tests the index_content function

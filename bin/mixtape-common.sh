@@ -228,9 +228,9 @@ index_epoch() {
     printf "@%x" $(date --date="${DATETIME}" +"%s")
 }
 
-# Prints matching (and existing) index files for a backup dir
-index_list() {
-    local DIR="$1" INDEX="${2:-}" GLOB FILES POS
+# Finds (existing) index files for a backup dir and index id/glob/etc
+index_files() {
+    local DIR="$1" INDEX="${2:-}" GLOB="" FILES POS
     if [[ ${INDEX:0:1} = "@" ]] ; then
         GLOB=$(index_datetime ${INDEX} file)
     elif [[ ${INDEX} = "all" || ${INDEX} = "*" ]] ; then
@@ -241,12 +241,18 @@ index_list() {
     elif [[ ${INDEX} = "last" ]] ; then
         GLOB="*"
         POS=-1
+    elif [[ "${INDEX}" == index.*.txt.xz ]] ; then
+        FILES=(${DIR}/index/${INDEX})
+    elif [[ "${INDEX}" == */index.*.txt.xz ]] ; then
+        FILES=(${INDEX})
     elif [[ -n ${INDEX} ]] ; then
         GLOB=$(echo -n \*${INDEX}\* | tr ' ' '-' | tr -d ':')
     else
         GLOB="*"
     fi
-    FILES=(${DIR}/index/index.${GLOB}.txt.xz)
+    if [[ -n "${GLOB}" ]] ; then
+        FILES=(${DIR}/index/index.${GLOB}.txt.xz)
+    fi
     if [[ -z ${POS:-} && -e ${FILES[0]} ]] ; then
         echo -n ${FILES[@]}
     elif [[ -n ${POS:-} && -e ${FILES[${POS}]} ]] ; then

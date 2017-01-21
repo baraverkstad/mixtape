@@ -70,7 +70,7 @@ main() {
     [[ ${#ARGS[@]} -eq 2 ]] || usage "incorrect number of arguments"
     INDEX="${ARGS[0]}"
     FILEGLOB="${ARGS[1]}"
-    INDEX_FILE=($(index_list "${MIXTAPE_DIR}" "${INDEX}"))
+    INDEX_FILE=($(index_files "${MIXTAPE_DIR}" "${INDEX}"))
     if [[ ${#INDEX_FILE[@]} -eq 0 ]] ; then
         die "no such index found: ${INDEX}"
     elif [[ ${#INDEX_FILE[@]} -gt 1 ]] ; then

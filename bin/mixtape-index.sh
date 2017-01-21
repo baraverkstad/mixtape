@@ -73,7 +73,7 @@ main() {
     if [[ -n "${FILEPATH}" && "${FILEPATH:0:1}" != "/" ]] ; then
         FILEPATH="/${FILEPATH}"
     fi
-    for INDEX_FILE in $(index_list "${MIXTAPE_DIR}" "${INDEX}") ; do
+    for INDEX_FILE in $(index_files "${MIXTAPE_DIR}" "${INDEX}") ; do
         ${FIRST} || [[ -z "${FILEPATH}" ]] || echo
         index_info "${INDEX_FILE}"
         if [[ -n "${FILEPATH}" ]] ; then
