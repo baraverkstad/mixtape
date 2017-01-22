@@ -181,24 +181,6 @@ parseopt() {
     fi
 }
 
-# Creates a unique empty file in TMP_DIR
-tmpfile_create() {
-    local NAME=${1:-tmp.txt} TPL EXT
-    if [[ ! -d ${TMP_DIR} ]] ; then
-        mkdir -p ${TMP_DIR}
-    fi
-    TPL="${NAME%.*}.XXXX"
-    EXT="${NAME##*.}"
-    mktemp -p ${TMP_DIR} --suffix=.${EXT:-txt} ${TPL}
-}
-
-# Removes all files in TMP_DIR (and directory itself)
-tmpfile_cleanup() {
-    if [[ -d ${TMP_DIR} ]] ; then
-        rm -rf ${TMP_DIR}
-    fi
-}
-
 # Checks if a directory looks like a valid backup dir
 is_mixtape_dir() {
     local DIR=$1
@@ -324,6 +306,31 @@ index_content_regex() {
     (IFS=; echo -n "${RE[*]}")
 }
 
+# Prints a human-friendly file size instead of KB
+file_size_human() {
+    local ARG=$1 SIZEKB=0 INT="" FLOAT=""
+    if [[ ${ARG} =~ ^[0-9]+$ ]] ; then
+        SIZEKB=${ARG}
+    elif [[ -e ${ARG} ]] ; then
+        SIZEKB=($(du -k --summarize ${ARG}))
+        SIZEKB=${SIZEKB[0]}
+    fi
+    if [[ ${SIZEKB} -ge 1048576 ]] ; then
+        INT=$(awk '{ printf "%.0f G", $1/1048576 }' <<< ${SIZEKB})
+        FLOAT=$(awk '{ printf "%.1f G", $1/1048576 }' <<< ${SIZEKB})
+    elif [[ ${SIZEKB} -ge 1024 ]] ; then
+        INT=$(awk '{ printf "%.0f M", $1/1024 }' <<< ${SIZEKB})
+        FLOAT=$(awk '{ printf "%.1f M", $1/1024 }' <<< ${SIZEKB})
+    else
+        INT="${SIZEKB} K"
+    fi
+    if [[ -z ${FLOAT} || ${#FLOAT} -gt 5 ]] ; then
+        echo -n "${INT}"
+    else
+        echo -n "${FLOAT}"
+    fi
+}
+
 # Prints file bits as the corresponding octal code
 file_access_octal() {
     local ACCESS=$1 PERM="0" POS SUBSTR DIGIT
@@ -342,6 +349,24 @@ file_access_octal() {
         PERM+="${DIGIT}"
     done
     echo -n "${PERM}"
+}
+
+# Creates a unique empty file in TMP_DIR
+tmpfile_create() {
+    local NAME=${1:-tmp.txt} TPL EXT
+    if [[ ! -d ${TMP_DIR} ]] ; then
+        mkdir -p ${TMP_DIR}
+    fi
+    TPL="${NAME%.*}.XXXX"
+    EXT="${NAME##*.}"
+    mktemp -p ${TMP_DIR} --suffix=.${EXT:-txt} ${TPL}
+}
+
+# Removes all files in TMP_DIR (and directory itself)
+tmpfile_cleanup() {
+    if [[ -d ${TMP_DIR} ]] ; then
+        rm -rf ${TMP_DIR}
+    fi
 }
 
 # Searches for a file by SHA in the large file store

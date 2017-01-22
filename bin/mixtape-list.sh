@@ -27,24 +27,20 @@ source ${LIBRARY} || exit 1
 index_info() {
     local FILE="$1"
     echo -n "${COLOR_WARN}$(index_epoch ${FILE})${COLOR_RESET}: ${FILE}"
-    xzcat ${FILE} | wc -l | awk '{printf " (%s entries",$1}'
-    du -h ${FILE} | awk '{printf ", %s)\n",$1}'
+    xzcat ${FILE} | wc -l | awk '{printf " (%s entries, ",$1}'
+    file_size_human ${FILE}
+    printf ")\n"
 }
 
 # Reads index entries from stdin and prints them
 index_content_print() {
-    local FORMAT=${1:-short} COUNT=0 SIZE SIZEMB EXTRA
+    local FORMAT=${1:-short} COUNT=0 SIZE EXTRA
     local INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION
     while IFS=$'\t' read INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
         SIZE=""
         EXTRA=""
         if [[ ${ACCESS:0:1} == "-" ]] ; then
-            if [[ ${SIZEKB} -gt 1024 ]] ; then
-                SIZEMB=$(echo ${SIZEKB} | awk '{printf "%.1f",$1/1024}')
-                SIZE="${SIZEMB}M"
-            else
-                SIZE="${SIZEKB}K"
-            fi
+            SIZE=$(file_size_human ${SIZEKB})
         elif [[ ${ACCESS:0:1} == "l" ]] ; then
             EXTRA=" -> ${LOCATION}"
         fi

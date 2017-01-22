@@ -30,7 +30,7 @@ source ${LIBRARY} || exit 1
 
 # Reads sorted index entries from stdin and prints them (grouped by file)
 index_print() {
-    local CURRENT="" CURRENT_SHA SIZEMB EXTRA
+    local CURRENT="" CURRENT_SHA EXTRA
     local INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION
     while IFS=$'\t' read INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
         if [[ "${CURRENT}" != "${FILE}" ]] ; then
@@ -49,11 +49,8 @@ index_print() {
             EXTRA=""
         elif [[ ${SHA} = "->" ]] ; then
             EXTRA="-> ${LOCATION}"
-        elif [[ ${SIZEKB} -gt 1024 ]] ; then
-            SIZEMB=$(echo ${SIZEKB} | awk '{printf "%.1f",$1/1024}')
-            EXTRA="${SIZEMB}M  ${SHA}"
         else
-            EXTRA="${SIZEKB}K  ${SHA}"
+            EXTRA="$(file_size_human ${SIZEKB})  ${SHA}"
         fi
         printf "%s: %s  %s %s  %s  %s\n" ${INDEX} ${ACCESS} ${USER} ${GROUP} "${DATETIME}" "${EXTRA}"
     done

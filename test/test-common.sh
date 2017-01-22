@@ -32,20 +32,6 @@ test_parseargs() {
     assert_raises "parseopt --unset" 1
 }
 
-# Tests the tmpfile_create and tmpfile_cleanup functions
-test_tmpfile_create() {
-    local FILE
-    assert_raises "[[ -d ${TMP_DIR} ]]" 1
-    FILE=$(tmpfile_create)
-    assert_raises "[[ -d ${TMP_DIR} ]]" 0
-    assert_raises "[[ -f ${FILE} ]]" 0
-    assert_raises "[[ ${FILE} == ${TMP_DIR}/tmp.????.txt ]]" 0
-    FILE=$(tmpfile_create test.bin)
-    assert_raises "[[ ${FILE} == ${TMP_DIR}/test.????.bin ]]" 0
-    assert_raises "tmpfile_cleanup" 0
-    assert_raises "[[ -d ${TMP_DIR} ]]" 1
-}
-
 # Tests the is_mixtape_dir function
 test_is_mixtape_dir() {
     assert "is_mixtape_dir ${TEST_DIR}/mixtape" ""
@@ -137,6 +123,20 @@ test_index_content_regex() {
     assert "index_content_regex '??.file.txt'" '\\t/[^\\t]*[^/\\t][^/\\t]\\.file\\.txt'
 }
 
+# Tests the file_size_human function
+test_file_size_human() {
+    local DIR=${TEST_DIR}/mixtape
+    assert "file_size_human 1" "1 K"
+    assert "file_size_human 1024" "1.0 M"
+    assert "file_size_human 1048576" "1.0 G"
+    assert "file_size_human 8888" "8.7 M"
+    assert "file_size_human 88888" "87 M"
+    assert "file_size_human 888888" "868 M"
+    assert "file_size_human 8888888" "8.5 G"
+    assert "file_size_human 88888888" "85 G"
+    assert "file_size_human ${DIR}/data/bff/f42/unsplash#1015-2048x1536.jpg" "552 K"
+}
+
 # Tests the file_access_octal function
 test_file_access_octal() {
     # read (4), write (2), and execute (1)
@@ -151,6 +151,21 @@ test_file_access_octal() {
     assert "file_access_octal 'drwxrwxrwx'" "0777"
     assert "file_access_octal ''" "0000"
     assert "file_access_octal '-r--'" "0400"
+}
+
+# Tests the tmpfile_create and tmpfile_cleanup functions
+test_tmpfile_create() {
+    local FILE
+    assert_raises "[[ -d ${TMP_DIR} ]]" 1
+    FILE=$(tmpfile_create)
+    assert_raises "[[ -d ${TMP_DIR} ]]" 0
+    assert_raises "[[ -f ${FILE} ]]" 0
+    assert_raises "[[ ${FILE} == ${TMP_DIR}/tmp.????.txt ]]" 0
+    assert_raises "[[ ${FILE} == ${TMP_DIR}/tmp.????.txt ]]" 0
+    FILE=$(tmpfile_create test.bin)
+    assert_raises "[[ ${FILE} == ${TMP_DIR}/test.????.bin ]]" 0
+    assert_raises "tmpfile_cleanup" 0
+    assert_raises "[[ -d ${TMP_DIR} ]]" 1
 }
 
 # Tests the largefile_search_sha function
