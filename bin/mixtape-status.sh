@@ -56,7 +56,7 @@ print_mixtape_status() {
         file_size_human ${DIR}/data/files
         find ${DIR}/data/files -type f | xargs -n 1 tar -t --absolute-names -f | \
             wc -l | awk '{printf ", %s files, ",$1}'
-        file_size_xz "${DIR}/data/files/*/*.xz" "archives"
+        file_size_xz "${DIR}/data/files/*/*.xz" "tarfiles"
     else
         printf "0 K, 0 files\n"
     fi
