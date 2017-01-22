@@ -89,25 +89,41 @@ print_disk_usage() {
 
 # Prints index content summary
 print_index_status() {
-    local INDEX_FILE=$1
-    echo "${COLOR_WARN}--- ${INDEX_FILE}: ---${COLOR_RESET}"
-    echo -n "Date:     "
+    local INDEX_FILE=$1 FILES REGULAR EXTSIZE COUNT SIZEKB FMT EXT
+    echo "${COLOR_WARN}--- ${INDEX_FILE} ---${COLOR_RESET}"
+    echo -n "Date:        "
     index_datetime ${INDEX_FILE}
     echo -n " ("
     index_epoch ${INDEX_FILE}
     echo ")"
-    echo -n "Size:     "
-    xz --robot --list ${INDEX_FILE} | tail -1 | \
-        awk '{printf  "%.1f KB compressed, ratio %.3f, %.1f KB saved\n", $4/1024, $6, ($5-$4)/1024}'
-    echo -n "Files:    "
-    xzcat ${INDEX_FILE} | wc -l | awk '{printf "%s total, ",$1}'
-    xzcat ${INDEX_FILE} | grep '^d' | wc -l | awk '{printf "%s dirs, ",$1}'
-    xzcat ${INDEX_FILE} | grep '^l' | wc -l | awk '{printf "%s symlinks, ",$1}'
-    xzcat ${INDEX_FILE} | grep '^-' | wc -l | awk '{printf "%s regular\n",$1}'
-    echo -n "Storage:  "
-    xzcat ${INDEX_FILE} | grep '^-' | cut -f 8 | grep ^files/ | wc -l | awk '{printf "%s smaller files (in ",$1}'
-    xzcat ${INDEX_FILE} | grep '^-' | cut -f 8 | grep ^files/ | sort | uniq | wc -l | awk '{printf "%s tar files), ",$1}'
-    xzcat ${INDEX_FILE} | grep '^-' | cut -f 8 | grep -v ^files/ | wc -l | awk '{printf "%s larger files\n",$1}'
+    echo -n "Size:        "
+    file_size_human ${INDEX_FILE}
+    echo -n " compressed, "
+    file_size_xz ${INDEX_FILE}
+    FILES=$(tmpfile_create all.txt)
+    REGULAR=$(tmpfile_create regular.txt)
+    xzcat ${INDEX_FILE} > ${FILES}
+    grep '^-' ${FILES} > ${REGULAR}
+    echo -n "Storage:     "
+    cut -f 8 ${REGULAR} | grep ^files/ | wc -l | awk '{printf "%s small files",$1}'
+    cut -f 8 ${REGULAR} | grep ^files/ | sort | uniq | wc -l | awk '{printf " (%s tarfiles)",$1}'
+    cut -f 8 ${REGULAR} | grep -v ^files/ | wc -l | awk '{printf ", %s large files\n",$1}'
+    echo -n "Files:       "
+    COUNT=($(wc -l ${FILES}))
+    SIZEKB=$(awk -F'\t' '{ sizekb+=$5 } END { printf "%s",sizekb }' ${REGULAR})
+    FMT="%${#COUNT}s files, %5s"
+    printf "${FMT}" "${COUNT}" "$(file_size_human ${SIZEKB})"
+    grep '^d' ${FILES} | wc -l | awk '{printf ", %s dirs",$1}'
+    grep '^l' ${FILES} | wc -l | awk '{printf ", %s symlinks",$1}'
+    wc -l ${REGULAR} | awk '{printf ", %s regular\n",$1}'
+    EXTSIZE=$(tmpfile_create exts.txt)
+    awk -F'\t' 'match($6, /[^/]\.([^./]+)$/, ext) { count[ext[1]]++; sizekb[ext[1]]+=$5 }
+                END { for (c in count) print sizekb[c], count[c], c }' ${REGULAR} | \
+        sort -n -r > ${EXTSIZE}
+    while read SIZEKB COUNT EXT ; do
+        printf "  %-11s" ".${EXT}"
+        printf "${FMT}\n" "${COUNT}" "$(file_size_human ${SIZEKB})"
+    done < <(head -n 10 ${EXTSIZE})
 }
 
 # Program start
@@ -119,6 +135,7 @@ main() {
         for INDEX_FILE in $(index_files "${MIXTAPE_DIR}" "${ARGS[0]}") ; do
             print_index_status ${INDEX_FILE}
         done
+        [[ -n "${INDEX_FILE:-}" ]] || warn "no matching index was found: ${ARGS[0]}"
     elif [[ ${MIXTAPE_DIR} != ${DEFAULT_MIXTAPE_DIR} ]] ; then
         print_mixtape_status ${MIXTAPE_DIR}
         print_disk_usage ${BACKUP_DIR}
