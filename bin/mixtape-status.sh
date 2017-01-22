@@ -15,9 +15,21 @@ SCRIPT=$(readlink $0 || echo -n $0)
 LIBRARY=$(dirname ${SCRIPT})/mixtape-common.sh
 source ${LIBRARY} || exit 1
 
+# Prints file count and sizes for XZ archives
+file_size_xz() {
+    local GLOB="$1" FILETYPE="${2:-}" TOTAL
+    TOTAL=($(xz --robot --list ${GLOB} | tail -1 | \
+             awk '{ printf "%s %.0f %.3f", $2, ($5-$4)/1024, $6 }'))
+    SIZE=$(file_size_human "${TOTAL[1]}")
+    if [[ ! -z "${FILETYPE}" ]] ; then
+        printf "%s %s, " "${TOTAL[0]}" "${FILETYPE}"
+    fi
+    printf "%s ratio, %s saved\n" "${TOTAL[2]}" "${SIZE}"
+}
+
 # Print mixtape directory stats summary
 print_mixtape_status() {
-    local DIR=$1 FILES
+    local DIR=$1 FILES SIZEKB
     echo "${COLOR_WARN}--- Statistics for ${DIR}: ---${COLOR_RESET}"
     FILES=(${DIR}/index/*.xz)
     if [[ ! -e ${FILES[0]} ]] ; then
@@ -36,29 +48,27 @@ print_mixtape_status() {
     echo ")"
     echo -n "Indices:        "
     file_size_human ${DIR}/index
-    echo -n ", ${#FILES[@]} files, "
-    xz --robot --list ${DIR}/index/*.xz | tail -1 | \
-        awk '{printf  "ratio %.3f, %.2f M saved\n", $6, ($5-$4)/1048576}'
+    echo -n ", "
+    file_size_xz "${DIR}/index/*.xz" "files"
     echo -n "Small files:    "
     FILES=(${DIR}/data/files/*/*.xz)
     if [[ -e ${FILES[0]} ]] ; then
         file_size_human ${DIR}/data/files
         find ${DIR}/data/files -type f | xargs -n 1 tar -t --absolute-names -f | \
             wc -l | awk '{printf ", %s files, ",$1}'
-        xz --robot --list ${DIR}/data/files/*/*.xz | tail -1 | \
-            awk '{printf  "%d archives, ratio %.3f, %.2f M saved\n", $2, $6, ($5-$4)/1048576}'
+        file_size_xz "${DIR}/data/files/*/*.xz" "archives"
     else
         printf "0 K, 0 files\n"
     fi
     echo -n "Large files:    "
     FILES=(${DIR}/data/???/???/*)
     if [[ -e ${FILES[0]} ]] ; then
-        du -h --max-depth=0 --exclude 'files/*' ${DIR}/data | awk '{printf "%s, ",$1}'
-        find ${DIR}/data/???/ -type f | wc -l | awk '{printf "%s files, ",$1}'
+        SIZEKB=($(du -k --summarize --exclude 'files/*' ${DIR}/data))
+        file_size_human ${SIZEKB[0]}
+        find ${DIR}/data/???/ -type f | wc -l | awk '{printf ", %s files, ",$1}'
         FILES=(${DIR}/data/???/???/*.xz)
         if [[ -e ${FILES[0]} ]] ; then
-            xz --robot --list ${DIR}/data/???/???/*.xz | tail -1 | \
-                awk '{printf  "%d compressed, ratio %.3f, %.2f M saved\n", $2, $6, ($5-$4)/1048576}'
+            file_size_xz "${DIR}/data/???/???/*.xz" "compressed"
         else
             printf "0 compressed\n"
         fi
