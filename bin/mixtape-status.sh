@@ -149,4 +149,7 @@ main() {
     fi
 }
 
+# Install cleanup handler, parse command-line and launch
+trap tmpfile_cleanup EXIT
+parseargs "$@"
 main

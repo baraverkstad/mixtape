@@ -89,4 +89,6 @@ main() {
     fi
 }
 
+# Parse command-line and launch
+parseargs "$@"
 main

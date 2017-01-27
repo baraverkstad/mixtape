@@ -85,4 +85,6 @@ main() {
         index_print
 }
 
+# Parse command-line and launch
+parseargs "$@"
 main

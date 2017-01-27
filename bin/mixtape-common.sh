@@ -422,8 +422,3 @@ largefile_restore() {
         cp -a "${SRC}" "${DST}"
     fi
 }
-
-# Parse command-line, trap exit and end with success
-parseargs "$@"
-trap tmpfile_cleanup EXIT
-true
