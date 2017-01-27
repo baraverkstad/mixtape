@@ -18,7 +18,7 @@ VERSION=0.4
 # Command-line parsing result variables
 ARGS=()
 OPTS=()
-VERBOSE=false
+DEBUG=false
 
 # Directory variables
 DEFAULT_BACKUP_DIR=/backup
@@ -58,10 +58,9 @@ warn() {
     logger -p local0.warning -t "${PROGRAM_ID}" -- "$@" || true
 }
 
-# Logs a message to stdout and syslog (if VERBOSE is true)
-log() {
-    ${VERBOSE} && echo $(date +"%F %T"): "$@" || true
-    ${VERBOSE} && logger -p local0.info -t "${PROGRAM_ID}" -- "$@" || true
+# Logs a message to stdout (if DEBUG is true)
+debug() {
+    ${DEBUG} && echo $(date +"%F %T"): "$@" || true
 }
 
 # Prints command-line usage info and exits
