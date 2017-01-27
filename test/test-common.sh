@@ -160,10 +160,9 @@ test_tmpfile_create() {
     FILE=$(tmpfile_create)
     assert_raises "[[ -d ${TMP_DIR} ]]" 0
     assert_raises "[[ -f ${FILE} ]]" 0
-    assert_raises "[[ ${FILE} == ${TMP_DIR}/tmp.????.txt ]]" 0
-    assert_raises "[[ ${FILE} == ${TMP_DIR}/tmp.????.txt ]]" 0
+    assert_raises "[[ ${FILE} == ${TMP_DIR}/file.tmp.???? ]]" 0
     FILE=$(tmpfile_create test.bin)
-    assert_raises "[[ ${FILE} == ${TMP_DIR}/test.????.bin ]]" 0
+    assert_raises "[[ ${FILE} == ${TMP_DIR}/test.bin.???? ]]" 0
     assert_raises "tmpfile_cleanup" 0
     assert_raises "[[ -d ${TMP_DIR} ]]" 1
 }

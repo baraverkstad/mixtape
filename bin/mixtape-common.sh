@@ -352,13 +352,11 @@ file_access_octal() {
 
 # Creates a unique empty file in TMP_DIR
 tmpfile_create() {
-    local NAME=${1:-tmp.txt} TPL EXT
+    local NAME=${1:-file.tmp}
     if [[ ! -d ${TMP_DIR} ]] ; then
         mkdir -p ${TMP_DIR}
     fi
-    TPL="${NAME%.*}.XXXX"
-    EXT="${NAME##*.}"
-    mktemp -p ${TMP_DIR} --suffix=.${EXT:-txt} ${TPL}
+    mktemp "${TMP_DIR}/${NAME}.XXXX"
 }
 
 # Removes all files in TMP_DIR (and directory itself)
