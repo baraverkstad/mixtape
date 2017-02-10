@@ -12,7 +12,7 @@ set -o pipefail
 # Program & version variables
 PROGRAM=$0
 PROGRAM_NAME=${PROGRAM%.sh}
-PROGRAM_ID=${PROGRAM_NAME}[$$]
+PROGRAM_ID="${PROGRAM_NAME}[$$]"
 VERSION=0.4
 
 # Command-line parsing result variables
@@ -60,19 +60,19 @@ warn() {
 
 # Logs a message to stdout (if DEBUG is true)
 debug() {
-    ${DEBUG} && echo $(date +"%F %T"): "$@" || true
+    (${DEBUG} && echo "$(date +'%F %T'):" "$@") || true
 }
 
 # Prints command-line usage info and exits
 usage() {
-    local ERROR="$@" LINE
-    while read LINE ; do
+    local ERROR="$*" LINE
+    while IFS= read -r LINE ; do
         if [[ ${LINE:0:1} = "#" ]] ; then
             echo "${LINE:2}" >&2
         else
             break
         fi
-    done < <(tail -n +3 $PROGRAM)
+    done < <(tail -n +3 "${PROGRAM}")
     if [[ ! -z "${ERROR}" ]] ; then
         [[ -z "${LINE:2}" ]] || echo >&2
         error "${ERROR}"
@@ -97,7 +97,7 @@ parseargs() {
             versioninfo
             ;;
         --backup-dir=*)
-            BACKUP_DIR=$(realpath ${1#*=} 2>/dev/null)
+            BACKUP_DIR=$(realpath "${1#*=}" 2>/dev/null)
             MIXTAPE_DIR=${BACKUP_DIR}/$(hostname)/mixtape
             if [[ ! -e ${BACKUP_DIR} ]] ; then
                 die "backup dir doesn't exist: ${1#*=}"
@@ -108,7 +108,7 @@ parseargs() {
             fi
             ;;
         --mixtape-dir=*)
-            MIXTAPE_DIR=$(realpath ${1#*=} 2>/dev/null)
+            MIXTAPE_DIR=$(realpath "${1#*=}" 2>/dev/null)
             if [[ ! -e ${MIXTAPE_DIR} ]] ; then
                 die "mixtape dir doesn't exist: ${1#*=}"
             elif [[ ! -d ${MIXTAPE_DIR} ]] ; then
@@ -158,16 +158,16 @@ parseopt() {
     for OPT in ${OPTS+"${OPTS[@]}"} ; do
         if [[ "${OPT}" == *=* ]] ; then
             NAME="${OPT%%=*}"
-            if [[ ${DEF} == ${NAME}=* ]] ; then
+            if [[ ${DEF} == "${NAME}="* ]] ; then
                 echo -n "${OPT#*=}"
                 return 0
-            elif [[ ${DEF} == ${NAME} ]] ; then
+            elif [[ ${DEF} == "${NAME}" ]] ; then
                 usage "option cannot have value: ${OPT}"
             fi
         else
-            if [[ ${DEF} == ${OPT} ]] ; then
+            if [[ ${DEF} == "${OPT}" ]] ; then
                 return 0
-            elif [[ ${DEF} == ${OPT}=* ]] ; then
+            elif [[ ${DEF} == "${OPT}="* ]] ; then
                 usage "option requires value: ${OPT}"
             fi
         fi
@@ -210,28 +210,29 @@ index_datetime() {
         DATETIME="${INDEX}"
         ;;
     esac
-    echo -n $(date --date="${DATETIME}" +"${FORMAT}")
+    date --date="${DATETIME}" +"${FORMAT}" | tr -d "\n"
 }
 
 # Prints hex epoch of an index file
 index_epoch() {
-    local INDEX=${1:-now} DATETIME
+    local INDEX=${1:-now} DATETIME EPOCH
     case "${INDEX}" in
     *index.????-??-??-????.txt.xz)
-        DATETIME=$(index_datetime ${INDEX})
+        DATETIME=$(index_datetime "${INDEX}")
         ;;
     *)
         DATETIME="${INDEX}"
         ;;
     esac
-    printf "@%x" $(date --date="${DATETIME}" +"%s")
+    EPOCH=$(date --date="${DATETIME}" +"%s")
+    printf "@%x" "${EPOCH}"
 }
 
 # Finds (existing) index files for a backup dir and index id/glob/etc
 index_files() {
     local DIR="$1" INDEX="${2:-}" GLOB="" FILES POS
     if [[ ${INDEX:0:1} = "@" ]] ; then
-        GLOB=$(index_datetime ${INDEX} file)
+        GLOB=$(index_datetime "${INDEX}" file)
     elif [[ ${INDEX} = "all" || ${INDEX} = "*" ]] ; then
         GLOB="*"
     elif [[ ${INDEX} = "first" ]] ; then
@@ -245,7 +246,7 @@ index_files() {
     elif [[ "${INDEX}" == */index.*.txt.xz ]] ; then
         FILES=(${INDEX})
     elif [[ -n ${INDEX} ]] ; then
-        GLOB=$(echo -n \*${INDEX}\* | tr ' ' '-' | tr -d ':')
+        GLOB=$(echo -n "*${INDEX}*" | tr ' ' '-' | tr -d ':')
     else
         GLOB="*"
     fi
@@ -253,9 +254,9 @@ index_files() {
         FILES=(${DIR}/index/index.${GLOB}.txt.xz)
     fi
     if [[ -z ${POS:-} && -e ${FILES[0]} ]] ; then
-        echo -n ${FILES[@]}
+        echo -n "${FILES[@]}"
     elif [[ -n ${POS:-} && -e ${FILES[${POS}]} ]] ; then
-        echo -n ${FILES[${POS}]}
+        echo -n "${FILES[${POS}]}"
     fi
 }
 
@@ -267,8 +268,8 @@ index_content() {
         FILTER="grep -i -P ${REGEX}"
     fi
     for INDEX_FILE in $(index_files "${DIR}" "${INDEX}") ; do
-        PREFIX=$(index_epoch ${INDEX_FILE})$'\t'
-        xzcat ${INDEX_FILE} | ${FILTER} | awk -v prefix="${PREFIX}" '$0 = prefix$0' || true
+        PREFIX=$(index_epoch "${INDEX_FILE}")$'\t'
+        xzcat "${INDEX_FILE}" | ${FILTER} | awk -v prefix="${PREFIX}" '$0 = prefix$0' || true
     done
 }
 
@@ -307,19 +308,19 @@ index_content_regex() {
 
 # Prints a human-friendly file size instead of KB
 file_size_human() {
-    local ARG=$1 SIZEKB=0 INT="" FLOAT=""
+    local ARG=$1 ARR=() SIZEKB=0 INT="" FLOAT=""
     if [[ ${ARG} =~ ^[0-9]+$ ]] ; then
         SIZEKB=${ARG}
     elif [[ -e ${ARG} ]] ; then
-        SIZEKB=($(du -k --summarize ${ARG}))
-        SIZEKB=${SIZEKB[0]}
+        ARR=($(du -k --summarize "${ARG}"))
+        SIZEKB=${ARR[0]}
     fi
     if [[ ${SIZEKB} -ge 1048576 ]] ; then
-        INT=$(awk '{ printf "%.0f G", $1/1048576 }' <<< ${SIZEKB})
-        FLOAT=$(awk '{ printf "%.1f G", $1/1048576 }' <<< ${SIZEKB})
+        INT=$(awk '{ printf "%.0f G", $1/1048576 }' <<< "${SIZEKB}")
+        FLOAT=$(awk '{ printf "%.1f G", $1/1048576 }' <<< "${SIZEKB}")
     elif [[ ${SIZEKB} -ge 1024 ]] ; then
-        INT=$(awk '{ printf "%.0f M", $1/1024 }' <<< ${SIZEKB})
-        FLOAT=$(awk '{ printf "%.1f M", $1/1024 }' <<< ${SIZEKB})
+        INT=$(awk '{ printf "%.0f M", $1/1024 }' <<< "${SIZEKB}")
+        FLOAT=$(awk '{ printf "%.1f M", $1/1024 }' <<< "${SIZEKB}")
     else
         INT="${SIZEKB} K"
     fi
@@ -368,13 +369,15 @@ tmpfile_cleanup() {
 
 # Searches for a file by SHA in the large file store
 largefile_search_sha() {
-    local DIR=$1 SHA=$2 FILE FILESHA SUBSTR
-    SUBSTR=" ${SHA} "
+    local DIR=$1 SHA=$2 ARR FILE FILESHA SUBSTR
+    SUBSTR=":${SHA}:"
     for FILE in ${DIR}/data/${SHA:0:3}/${SHA:3:3}/* ; do
         if [[ -e ${FILE} ]] ; then
-            FILESHA=" $(shasum ${FILE} | cut -d ' ' -f 1) "
+            ARR=($(shasum "${FILE}"))
+            FILESHA=":${ARR[0]}:"
             if [[ ${FILE} == *.xz ]] ; then
-                FILESHA+="$(xzcat ${FILE} | shasum | cut -d ' ' -f 1) "
+                ARR=($(xzcat "${FILE}" | shasum))
+                FILESHA+=":${ARR[0]}:"
             fi
             if [[ ${FILESHA} == *"${SUBSTR}"* ]] ; then
                 echo -n "${FILE}"
@@ -386,9 +389,10 @@ largefile_search_sha() {
 
 # Stores a file into the large file store (if not already present)
 largefile_store() {
-    local DIR=$1 FILE=$2 SHA=${3:-} OUTFILE
+    local DIR=$1 FILE=$2 SHA=${3:-} ARR OUTFILE
     if [[ -z "${SHA}" ]] ; then
-        SHA=$(shasum ${FILE} | cut -d ' ' -f 1)
+        ARR=($(shasum "${FILE}"))
+        SHA=${ARR[0]}
     fi
     OUTFILE=$(largefile_search_sha "${DIR}" "${SHA}")
     if [[ ! -e "${OUTFILE}" ]] ; then
