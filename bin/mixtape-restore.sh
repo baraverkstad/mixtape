@@ -13,18 +13,17 @@
 #
 
 # Import common functions
-SCRIPT=$(readlink $0 || echo -n $0)
-LIBRARY=$(dirname ${SCRIPT})/mixtape-common.sh
-source ${LIBRARY} || exit 1
+SCRIPT=$(readlink "$0" || echo -n "$0")
+LIBRARY=$(dirname "${SCRIPT}")/mixtape-common.sh
+source "${LIBRARY}" || exit 1
 
 # Restores files from a backup (listed in tar file order)
 restore_files() {
-    local DIR="$1" TARFILE="" FILES
-    local INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION
-    mkdir -p ${DIR}
-    cd ${DIR}
+    local DIR="$1" TARFILE="" FILES ACCESS FILE LOCATION
+    mkdir -p "${DIR}"
+    cd "${DIR}" || die "couldn't create ${DIR}"
     FILES=$(tmpfile_create files.txt)
-    while IFS=$'\t' read INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
+    while IFS=$'\t' read -r _ ACCESS _ _ _ _ FILE _ LOCATION ; do
         if [[ ${ACCESS:0:1} == "d" && ! -e "${FILE:1}" ]] ; then
             mkdir -p "${FILE:1}"
         elif [[ ${ACCESS:0:1} == "l" ]] ; then
@@ -34,12 +33,12 @@ restore_files() {
                 largefile_restore "${MIXTAPE_DIR}/data/${LOCATION}" "${FILE:1}"
             elif [[ "${TARFILE}" != "${LOCATION}" ]] ; then
                 if [[ -n "${TARFILE}" ]] ; then
-                    tar -xf "${MIXTAPE_DIR}/data/${TARFILE}" -T ${FILES}
+                    tar -xf "${MIXTAPE_DIR}/data/${TARFILE}" -T "${FILES}"
                 fi
                 TARFILE="${LOCATION}"
-                echo "${FILE:1}" > ${FILES}
+                echo "${FILE:1}" > "${FILES}"
             else
-                echo "${FILE:1}" >> ${FILES}
+                echo "${FILE:1}" >> "${FILES}"
             fi
         fi
     done
@@ -50,12 +49,11 @@ restore_files() {
 
 # Restores file metadata (user, group, permissions) from a backup
 restore_meta() {
-    local DIR="$1" DST
-    local INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION
-    while IFS=$'\t' read INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
+    local DIR="$1" DST ACCESS USER GROUP DATETIME FILE
+    while IFS=$'\t' read -r _ ACCESS USER GROUP DATETIME _ FILE _ _ ; do
         DST="${DIR}/${FILE:1}"
         if [[ -e "${DST}" ]] ; then
-            chmod "$(file_access_octal ${ACCESS})" "${DST}"
+            chmod "$(file_access_octal "${ACCESS}")" "${DST}"
             chown "${USER}:${GROUP}" "${DST}"
             touch --no-dereference --date="${DATETIME}" "${DST}"
         fi
@@ -64,21 +62,22 @@ restore_meta() {
 
 # Program start
 main() {
-    local INDEX FILEGLOB INDEX_FILE DIR
+    local INDEX FILEGLOB ARR INDEX_FILE DIR
     checkopts
     [[ ${#ARGS[@]} -eq 2 ]] || usage "incorrect number of arguments"
     INDEX="${ARGS[0]}"
     FILEGLOB="${ARGS[1]}"
-    INDEX_FILE=($(index_files "${MIXTAPE_DIR}" "${INDEX}"))
-    if [[ ${#INDEX_FILE[@]} -eq 0 ]] ; then
+    ARR=($(index_files "${MIXTAPE_DIR}" "${INDEX}"))
+    if [[ ${#ARR[@]} -eq 0 ]] ; then
         die "no such index found: ${INDEX}"
-    elif [[ ${#INDEX_FILE[@]} -gt 1 ]] ; then
+    elif [[ ${#ARR[@]} -gt 1 ]] ; then
         die "multiple matching indexes found: ${INDEX}"
     fi
     if [[ "${FILEGLOB:0:1}" != "/" ]] ; then
         FILEGLOB="/${FILEGLOB}"
     fi
-    DIR=${MIXTAPE_DIR}/restore-$(index_datetime ${INDEX_FILE} file)
+    INDEX_FILE=${ARR[0]}
+    DIR=${MIXTAPE_DIR}/restore-$(index_datetime "${INDEX_FILE}" file)
     echo -n "${COLOR_WARN}"
     echo "Restoring ${FILEGLOB}"
     echo "     from ${INDEX_FILE}"
