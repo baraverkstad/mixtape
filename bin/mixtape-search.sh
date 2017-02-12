@@ -36,7 +36,7 @@ index_print() {
         if [[ "${CURRENT}" != "${FILE}" ]] ; then
             [[ -z ${CURRENT} ]] || echo
             CURRENT=${FILE}
-            CURRENT_SHA=$(file_shasum "${FILE}")
+            CURRENT_SHA=$(file_sha1 "${FILE}")
             echo -n "${COLOR_WARN}${FILE}"
             if [[ ! -e ${FILE} ]] ; then
                 echo -n " ${COLOR_ERR}[deleted]"

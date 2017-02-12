@@ -153,13 +153,13 @@ test_file_access_octal() {
     assert "file_access_octal '-r--'" "0400"
 }
 
-# Tests the file_shasum function
-test_file_shasum() {
+# Tests the file_sha1 function
+test_file_sha1() {
     local FILE="${TEST_DIR}/mixtape/data/bff/f42/unsplash#1015-2048x1536.jpg"
-    assert "file_shasum ${FILE}" "bfff4213a7adcb1c33e76f78484a167fe2848113"
-    assert "file_shasum does.not.exist" ""
-    assert_raises "file_shasum does.not.exist" 0
-    assert "echo test | file_shasum" "4e1243bd22c66e76c2ba9eddc1f91394e57f9f83"
+    assert "file_sha1 ${FILE}" "bfff4213a7adcb1c33e76f78484a167fe2848113"
+    assert "file_sha1 does.not.exist" ""
+    assert_raises "file_sha1 does.not.exist" 0
+    assert "echo test | file_sha1" "4e1243bd22c66e76c2ba9eddc1f91394e57f9f83"
 }
 
 # Tests the tmpfile_create and tmpfile_cleanup functions
@@ -224,8 +224,8 @@ test_largefile_restore() {
     assert_raises "largefile_restore ${SRC2} ${DST2}" 0
     assert "find ${DIR} -type f | wc -l" "2"
     assert "find ${DIR} -type d | tail -1" "${DIR}/sub/dir"
-    assert "shasum ${DST1} | cut -d ' ' -f 1" "${SHA1}"
-    assert "shasum ${DST2} | cut -d ' ' -f 1" "${SHA2}"
+    assert "file_sha1 ${DST1}" "${SHA1}"
+    assert "file_sha1 ${DST2}" "${SHA2}"
     rm -rf ${DIR}
 }
 
