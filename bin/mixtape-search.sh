@@ -24,23 +24,23 @@
 #
 
 # Import common functions
-SCRIPT=$(readlink $0 || echo -n $0)
-LIBRARY=$(dirname ${SCRIPT})/mixtape-common.sh
-source ${LIBRARY} || exit 1
+SCRIPT=$(readlink "$0" || echo -n "$0")
+LIBRARY=$(dirname "${SCRIPT}")/mixtape-common.sh
+source "${LIBRARY}" || exit 1
 
 # Reads sorted index entries from stdin and prints them (grouped by file)
 index_print() {
     local CURRENT="" CURRENT_SHA EXTRA
     local INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION
-    while IFS=$'\t' read INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
+    while IFS=$'\t' read -r INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
         if [[ "${CURRENT}" != "${FILE}" ]] ; then
             [[ -z ${CURRENT} ]] || echo
             CURRENT=${FILE}
             CURRENT_SHA=$(file_sha1 "${FILE}")
             echo -n "${COLOR_WARN}${FILE}"
-            if [[ ! -e ${FILE} ]] ; then
+            if [[ ! -e "${FILE}" ]] ; then
                 echo -n " ${COLOR_ERR}[deleted]"
-            elif [[ ${ACCESS:0:1} == "-" && ${CURRENT_SHA} != ${SHA} ]] ; then
+            elif [[ ${ACCESS:0:1} == "-" && "${CURRENT_SHA}" != "${SHA}" ]] ; then
                 echo -n " ${COLOR_ERR}[modified]"
             fi
             echo "${COLOR_RESET}"
@@ -50,9 +50,9 @@ index_print() {
         elif [[ ${SHA} = "->" ]] ; then
             EXTRA="-> ${LOCATION}"
         else
-            EXTRA="$(file_size_human ${SIZEKB})  ${SHA}"
+            EXTRA="$(file_size_human "${SIZEKB}")  ${SHA}"
         fi
-        printf "%s: %s  %s %s  %s  %s\n" ${INDEX} ${ACCESS} ${USER} ${GROUP} "${DATETIME}" "${EXTRA}"
+        printf "%s: %s  %s %s  %s  %s\n" "${INDEX}" "${ACCESS}" "${USER}" "${GROUP}" "${DATETIME}" "${EXTRA}"
     done
 }
 
