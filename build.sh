@@ -81,7 +81,7 @@ print_inlined_script() {
         '# Import common'*)
             ECHO=false
             ;;
-        'source ${LIBRARY}'*)
+        'source "${LIBRARY}"'*)
             ECHO=true
             print_common_inlined "${SCRIPT}"
             continue
