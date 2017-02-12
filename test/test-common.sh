@@ -153,6 +153,15 @@ test_file_access_octal() {
     assert "file_access_octal '-r--'" "0400"
 }
 
+# Tests the file_shasum function
+test_file_shasum() {
+    local FILE="${TEST_DIR}/mixtape/data/bff/f42/unsplash#1015-2048x1536.jpg"
+    assert "file_shasum ${FILE}" "bfff4213a7adcb1c33e76f78484a167fe2848113"
+    assert "file_shasum does.not.exist" ""
+    assert_raises "file_shasum does.not.exist" 0
+    assert "echo test | file_shasum" "4e1243bd22c66e76c2ba9eddc1f91394e57f9f83"
+}
+
 # Tests the tmpfile_create and tmpfile_cleanup functions
 test_tmpfile_create() {
     local FILE

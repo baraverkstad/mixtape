@@ -351,6 +351,13 @@ file_access_octal() {
     echo -n "${PERM}"
 }
 
+# Prints the SHA1 hash for a single file (or stdin)
+file_shasum() {
+    local FILE="${1:--}" ARR
+    ARR=($(shasum "${FILE}" 2>/dev/null))
+    echo -n "${ARR[0]:-}"
+}
+
 # Creates a unique empty file in TMP_DIR
 tmpfile_create() {
     local NAME=${1:-file.tmp}
@@ -369,15 +376,13 @@ tmpfile_cleanup() {
 
 # Searches for a file by SHA in the large file store
 largefile_search_sha() {
-    local DIR=$1 SHA=$2 ARR FILE FILESHA SUBSTR
+    local DIR=$1 SHA=$2 FILE FILESHA SUBSTR
     SUBSTR=":${SHA}:"
     for FILE in ${DIR}/data/${SHA:0:3}/${SHA:3:3}/* ; do
         if [[ -e ${FILE} ]] ; then
-            ARR=($(shasum "${FILE}"))
-            FILESHA=":${ARR[0]}:"
+            FILESHA=":"$(file_shasum "${FILE}")":"
             if [[ ${FILE} == *.xz ]] ; then
-                ARR=($(xzcat "${FILE}" | shasum))
-                FILESHA+=":${ARR[0]}:"
+                FILESHA+=":"$(xzcat "${FILE}" | file_shasum)":"
             fi
             if [[ ${FILESHA} == *"${SUBSTR}"* ]] ; then
                 echo -n "${FILE}"
@@ -389,10 +394,9 @@ largefile_search_sha() {
 
 # Stores a file into the large file store (if not already present)
 largefile_store() {
-    local DIR=$1 FILE=$2 SHA=${3:-} ARR OUTFILE
+    local DIR=$1 FILE=$2 SHA=${3:-} OUTFILE
     if [[ -z "${SHA}" ]] ; then
-        ARR=($(shasum "${FILE}"))
-        SHA=${ARR[0]}
+        SHA=$(file_shasum "${FILE}")
     fi
     OUTFILE=$(largefile_search_sha "${DIR}" "${SHA}")
     if [[ ! -e "${OUTFILE}" ]] ; then

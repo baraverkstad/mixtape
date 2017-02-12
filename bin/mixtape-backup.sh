@@ -109,7 +109,7 @@ fi
 if [[ -s ${STORE_LARGE} ]] ; then
     while read INFILE ; do
         echo "Storing ${INFILE}..."
-        SHA=$(shasum ${INFILE} | cut -d ' ' -f 1)
+        SHA=$(file_shasum "${INFILE}")
         OUTFILE=$(largefile_store "${MIXTAPE_DIR}" "${INFILE}" "${SHA}")
         printf "%s\t%s\t%s\n" "${INFILE}" "${SHA}" "${OUTFILE#${DATA_DIR}/}" >> ${STORE_UNSORTED}
     done < ${STORE_LARGE}
