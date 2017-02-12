@@ -19,48 +19,48 @@
 #
 
 # Import common functions
-SCRIPT=$(readlink $0 || echo -n $0)
-LIBRARY=$(dirname ${SCRIPT})/mixtape-common.sh
-source ${LIBRARY} || exit 1
+SCRIPT=$(readlink "$0" || echo -n "$0")
+LIBRARY=$(dirname "${SCRIPT}")/mixtape-common.sh
+source "${LIBRARY}" || exit 1
 
 # Prints index information
 index_info() {
     local FILE="$1"
-    echo -n "${COLOR_WARN}$(index_epoch ${FILE})${COLOR_RESET}: ${FILE}"
-    xzcat ${FILE} | wc -l | awk '{printf " (%s entries, ",$1}'
-    file_size_human ${FILE}
+    echo -n "${COLOR_WARN}$(index_epoch "${FILE}")${COLOR_RESET}: ${FILE}"
+    xzcat "${FILE}" | wc -l | awk '{printf " (%s entries, ",$1}'
+    file_size_human "${FILE}"
     printf ")\n"
 }
 
 # Reads index entries from stdin and prints them
 index_content_print() {
     local FORMAT=${1:-short} COUNT=0 SIZE EXTRA
-    local INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION
-    while IFS=$'\t' read INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
+    local ACCESS DATETIME SIZEKB FILE LOCATION
+    while IFS=$'\t' read -r _ ACCESS _ _ DATETIME SIZEKB FILE _ LOCATION ; do
         SIZE=""
         EXTRA=""
         if [[ ${ACCESS:0:1} == "-" ]] ; then
-            SIZE=$(file_size_human ${SIZEKB})
+            SIZE=$(file_size_human "${SIZEKB}")
         elif [[ ${ACCESS:0:1} == "l" ]] ; then
             EXTRA=" -> ${LOCATION}"
         fi
         if [[ ${FORMAT} == "long" ]] ; then
-            printf "%s  %s  %6s  %s%s\n" ${ACCESS} "${DATETIME}" "${SIZE}" "${FILE}" "${EXTRA}"
+            printf "%s  %s  %6s  %s%s\n" "${ACCESS}" "${DATETIME}" "${SIZE}" "${FILE}" "${EXTRA}"
         else
             printf "%s\n" "${FILE}"
         fi
         COUNT=$((COUNT+1))
     done
     if [[ ${COUNT} -eq 0 ]] ; then
-        printf -- "-- No matched files --\n"
+        echo "-- No matched files --"
     else
-        printf -- "-- Total: ${COUNT} files --\n"
+        echo "-- Total: ${COUNT} files --"
     fi
 }
 
 # Program start
 main() {
-    local FORMAT="short" INDEX="" FILEPATH="" FIRST=true OPT INDEX_FILE
+    local FORMAT="short" INDEX="" FILEPATH="" FIRST=true INDEX_FILE
     checkopts --long
     if parseopt --long ; then
         FORMAT="long"
