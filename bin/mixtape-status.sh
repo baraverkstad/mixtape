@@ -17,8 +17,9 @@ source "${LIBRARY}" || exit 1
 
 # Prints file count and sizes for XZ archives
 file_size_xz() {
-    local GLOB="$1" FILETYPE="${2:-}" TOTAL
-    TOTAL=($(xz --robot --list ${GLOB} | tail -1 | \
+    local GLOB="$1" FILETYPE="${2:-}" FILES TOTAL
+    FILES=(${GLOB})
+    TOTAL=($(xz --robot --list "${FILES[@]}" | tail -1 | \
              awk '{ printf "%s %.0f %.3f", $2, ($5-$4)/1024, $6 }'))
     SIZE=$(file_size_human "${TOTAL[1]}")
     if [[ ! -z "${FILETYPE}" ]] ; then
@@ -113,7 +114,8 @@ print_index_status() {
     COUNT=${ARR[0]}
     SIZEKB=$(awk -F'\t' '{ sizekb+=$5 } END { printf "%s",sizekb }' "${REGULAR}")
     FMT="%${#COUNT}s files, %5s"
-    printf "${FMT}" "${COUNT}" "$(file_size_human ${SIZEKB})"
+    # shellcheck disable=SC2059
+    printf "${FMT}" "${COUNT}" "$(file_size_human "${SIZEKB}")"
     grep -c "^d" "${FILES}" | awk '{printf ", %s dirs",$1}'
     grep -c "^l" "${FILES}" | awk '{printf ", %s symlinks",$1}'
     wc -l "${REGULAR}" | awk '{printf ", %s regular\n",$1}'
@@ -123,7 +125,8 @@ print_index_status() {
         sort -n -r > "${EXTSIZE}"
     while read -r SIZEKB COUNT EXT ; do
         printf "  %-11s" ".${EXT}"
-        printf "${FMT}\n" "${COUNT}" "$(file_size_human ${SIZEKB})"
+        # shellcheck disable=SC2059
+        printf "${FMT}\n" "${COUNT}" "$(file_size_human "${SIZEKB}")"
     done < <(head -n 10 "${EXTSIZE}")
 }
 
