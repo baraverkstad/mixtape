@@ -2,7 +2,7 @@
 #
 # Prints a backup status summary or a summary for a specified index.
 #
-# Syntax: mixtape-status [index]
+# Syntax: mixtape-status [<index>]
 #
 # Arguments:
 #   <index>          The optional index id (e.g. "@586efbc4"), named search
@@ -132,12 +132,14 @@ print_index_status() {
 
 # Program start
 main() {
-    local INDEX_FILE
+    local INDEX_FILE FIRST=true
     checkopts
     [[ ${#ARGS[@]} -le 1 ]] || usage "too many arguments"
     if [[ ${#ARGS[@]} -eq 1 ]] ; then
         for INDEX_FILE in $(index_files "${MIXTAPE_DIR}" "${ARGS[0]}") ; do
+            ${FIRST} || echo
             print_index_status "${INDEX_FILE}"
+            FIRST=false
         done
         [[ -n "${INDEX_FILE:-}" ]] || warn "no matching index was found: ${ARGS[0]}"
     elif [[ "${MIXTAPE_DIR}" != "${DEFAULT_MIXTAPE_DIR}" ]] ; then
