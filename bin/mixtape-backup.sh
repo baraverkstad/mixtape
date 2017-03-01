@@ -1,18 +1,106 @@
 #!/usr/bin/env bash
 #
-# Stores copies of files to a backup.
+# Stores copies of files in a backup.
 #
-# Syntax: mixtape-backup
+# Syntax: mixtape-backup [<path> ...]
 #
-# Config:
-#   /etc/mixtape-backup.conf
-#       Lists directories to backup, one per line
+# Arguments:
+#   <path>           A file or directory to backup (recursively). Required
+#                    for the first backup. Subsequent runs will reuse the same
+#                    paths as the first. Specific file names or subdirs may be
+#                    excluded by prefixing with a '-' char.
 #
 
 # Import common functions
-SCRIPT=$(readlink $0 || echo -n $0)
-LIBRARY=$(dirname ${SCRIPT})/mixtape-common.sh
-source ${LIBRARY} || exit 1
+SCRIPT=$(readlink "$0" || echo -n "$0")
+LIBRARY=$(dirname "${SCRIPT}")/mixtape-common.sh
+source "${LIBRARY}" || exit 1
+
+# TODO: remove temp bridge variable
+INPUT_FILES=${TMP_DIR}/input-files.txt
+
+# Prints the default backup configuration
+config_default() {
+    echo "# Configuration of backup includes and excludes."
+    echo "#"
+    echo "# /dir             includes '/dir' into backup"
+    echo "# - /dir/subdir    excludes '/dir/subdir' from backup"
+    echo "# - name           excludes all 'name' files and dirs"
+    echo
+    echo "- .git"
+    echo "- .hg"
+    echo "- .svn"
+}
+
+# Adds a pattern to the backup configuration (created if needed)
+config_add() {
+    local CONFIG="$1" PATTERN="${2:-}"
+    if [[ ! -f "${CONFIG}" ]] ; then
+        config_default > "${CONFIG}"
+    fi
+    if [[ "${PATTERN}" == "-"* ]] ; then
+        printf -- "- %s\n" "$(trim "${PATTERN:1}")" >> "${CONFIG}"
+    elif [[ "${PATTERN}" == "+"* ]] ; then
+        realpath -ms "${PATTERN:1}" >> "${CONFIG}"
+    elif [[ -n "${PATTERN}" ]] ; then
+        realpath -ms "${PATTERN}" >> "${CONFIG}"
+    fi
+}
+
+# Prints a partial index of all input files to backup
+index_input_files() {
+    local CONFIG="$1" INCLUDE EXCLUDE IGNORE LINE
+    INCLUDE=$(tmpfile_create input_include.txt)
+    EXCLUDE=$(tmpfile_create input_exclude.txt)
+    IGNORE=$(tmpfile_create input_ignore.txt)
+    touch "${INCLUDE}" "${EXCLUDE}" "${IGNORE}"
+    while IFS= read -r LINE ; do
+        [[ "${LINE}" != "" && "${LINE:0:1}" != "#" ]] || continue
+        if [[ "${LINE}" == "-"*/* ]] ; then
+            printf "%s\n" "$(trim "${LINE:1}")" >> "${EXCLUDE}"
+        elif [[ "${LINE}" == "-"* ]] ; then
+            printf "%s\n" "$(trim "${LINE:1}")" >> "${IGNORE}"
+        elif [[ "${LINE}" == "+"* ]] ; then
+            printf "%s\n" "$(trim "${LINE:1}")" >> "${INCLUDE}"
+        else
+            printf "%s\n" "$(trim "${LINE}")" >> "${INCLUDE}"
+        fi
+    done < "$CONFIG"
+    if [[ ! -s ${INCLUDE} ]] ; then
+        die "no files included in backup"
+    fi
+    # shellcheck disable=SC2046
+    find $(< "${INCLUDE}") \
+         $(xargs -L 1 printf '-not ( -path %s -prune ) ' < "${EXCLUDE}") \
+         $(xargs -L 1 printf '-not ( -name %s -prune ) ' < "${IGNORE}") \
+         -printf '%M\t%u\t%g\t%TF %.8TT\t%k\t%p\t%l\n' | \
+         sort --field-separator=$'\t' --key=6,6
+}
+
+# Program start
+main() {
+    local CONFIG="${MIXTAPE_DIR}/config" ARG
+    checkopts
+    if [[ ${#ARGS[@]} -gt 0 ]] ; then
+        for ARG in "${ARGS[@]}" ; do
+            config_add "${CONFIG}" "${ARG}"
+        done
+    elif [[ ! -f "${CONFIG}" && -f /etc/mixtape-backup.conf ]] ; then
+        # TODO: Remove this legacy config copying
+        while IFS= read -r LINE ; do
+            [[ "${LINE}" != "" && "${LINE:0:1}" != "#" ]] || continue
+            config_add "${CONFIG}" "${LINE}"
+        done < /etc/mixtape-backup.conf
+    fi
+    [[ -f "${CONFIG}" ]] || usage "no backup files selected"
+    mkdir "${TMP_DIR}"
+    index_input_files "${CONFIG}" > "${INPUT_FILES}"
+}
+
+# Install cleanup handler, parse command-line and launch
+trap tmpfile_cleanup EXIT
+parseargs "$@"
+main
 
 # Unset caution flags
 # TODO: revert this once script converted
@@ -22,17 +110,12 @@ set +o errexit
 set +o pipefail
 
 # Global vars
-CONFIG=mixtape-backup.conf
 DATA_DIR=${MIXTAPE_DIR}/data
 INDEX_DIR=${MIXTAPE_DIR}/index
 
 DATE_MONTH=$(date '+%Y-%m')
 DATE_MINUTE=$(date '+%Y-%m-%d-%H%M')
 INPUT_INDEX=$(ls ${INDEX_DIR}/index.????-??-??-????.txt.xz 2> /dev/null | tail -1)
-INPUT_FILES=${TMP_DIR}/input-files.txt
-INPUT_IGNORE=${TMP_DIR}/input-ignore.txt
-INPUT_INCLUDE=${TMP_DIR}/input-include.txt
-INPUT_EXCLUDE=${TMP_DIR}/input-exclude.txt
 MATCH_INPUT=${TMP_DIR}/match-input.txt
 MATCH_SHASUM=${TMP_DIR}/match-shasum.txt
 MATCH_UPTODATE=${TMP_DIR}/match-uptodate.txt
@@ -46,27 +129,7 @@ STORE_SORTED=${TMP_DIR}/store-sorted.txt
 OUTPUT_TARFILE=${DATA_DIR}/files/${DATE_MONTH}/files.${DATE_MINUTE}.tar.xz
 OUTPUT_INDEX=${INDEX_DIR}/index.${DATE_MINUTE}.txt
 
-rm -rf ${TMP_DIR}
-mkdir -p ${TMP_DIR} ${INDEX_DIR} ${DATA_DIR}
-
-# List input files
-echo '.git .hg .svn' > ${INPUT_IGNORE}
-touch ${INPUT_INCLUDE} ${INPUT_EXCLUDE}
-while read RULE ; do
-    [[ "${RULE}" != "" && "${RULE:0:1}" != "#" ]] || continue
-    if [[ "${RULE:0:1}" == "-" ]] ; then
-        echo ${RULE:1} >> ${INPUT_EXCLUDE}
-    elif [[ "${SRC:0:1}" == "+" ]] ; then
-        echo ${RULE:1} >> ${INPUT_INCLUDE}
-    else
-        echo ${RULE} >> ${INPUT_INCLUDE}
-    fi
-done < /etc/$CONFIG
-find $(<${INPUT_INCLUDE}) \
-     $(xargs -L 1 printf '-not ( -path %s -prune ) ' <${INPUT_EXCLUDE}) \
-     $(xargs -L 1 printf '-not ( -name %s -prune ) ' <${INPUT_IGNORE}) \
-     -printf '%M\t%u\t%g\t%TF %.8TT\t%k\t%p\t%l\n' | \
-     sort --field-separator=$'\t' --key=6,6 > ${INPUT_FILES}
+mkdir -p ${INDEX_DIR} ${DATA_DIR}
 
 # Match to existing index
 if [[ -e "${INPUT_INDEX}" ]] ; then
