@@ -8,6 +8,15 @@ TEST_DIR=$(dirname $0)
 source ${TEST_DIR}/assert.sh
 source ${TEST_DIR}/../bin/mixtape-common.sh
 
+test_trim() {
+    assert "trim" ""
+    assert "trim '    '" ""
+    assert "trim test" "test"
+    assert "trim '    test  '" "test"
+    local STR=$(printf "\n\t %s %s \n\t" one "  two  ")
+    assert 'trim "${STR}"' "one   two"
+}
+
 # Tests the parseargs, checkopts & parseopt functions
 test_parseargs() {
     ARGS=()

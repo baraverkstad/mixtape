@@ -84,6 +84,14 @@ versioninfo() {
     exit 1
 }
 
+# Prints a string without leading and trailing whitespace
+trim() {
+    local STR="$*"
+    STR="${STR#"${STR%%[![:space:]]*}"}"
+    STR="${STR%"${STR##*[![:space:]]}"}"
+    echo -n "$STR"
+}
+
 # Parse command-line arguments to ARGS and OPTS vars
 parseargs() {
     while [[ $# -gt 0 ]] ; do
