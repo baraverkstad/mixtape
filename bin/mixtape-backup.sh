@@ -16,9 +16,6 @@ SCRIPT=$(readlink "$0" || echo -n "$0")
 LIBRARY=$(dirname "${SCRIPT}")/mixtape-common.sh
 source "${LIBRARY}" || exit 1
 
-# TODO: remove temp bridge variable
-INPUT_FILES=${TMP_DIR}/input-files.txt
-
 # Prints the default backup configuration
 config_default() {
     echo "# Configuration of backup includes and excludes."
@@ -34,25 +31,26 @@ config_default() {
 
 # Adds a pattern to the backup configuration (created if needed)
 config_add() {
-    local CONFIG="$1" PATTERN="${2:-}"
-    if [[ ! -f "${CONFIG}" ]] ; then
-        config_default > "${CONFIG}"
+    local PATTERN=$1
+    mkdir -p "${MIXTAPE_DIR}"
+    if [[ ! -f "${MIXTAPE_DIR}/config" ]] ; then
+        config_default > "${MIXTAPE_DIR}/config"
     fi
     if [[ "${PATTERN}" == "-"* ]] ; then
-        printf -- "- %s\n" "$(trim "${PATTERN:1}")" >> "${CONFIG}"
+        printf -- "- %s\n" "$(trim "${PATTERN:1}")" >> "${MIXTAPE_DIR}/config"
     elif [[ "${PATTERN}" == "+"* ]] ; then
-        realpath -ms "${PATTERN:1}" >> "${CONFIG}"
+        realpath -ms "${PATTERN:1}" >> "${MIXTAPE_DIR}/config"
     elif [[ -n "${PATTERN}" ]] ; then
-        realpath -ms "${PATTERN}" >> "${CONFIG}"
+        realpath -ms "${PATTERN}" >> "${MIXTAPE_DIR}/config"
     fi
 }
 
-# Prints a partial index of all input files to backup
-index_input_files() {
-    local CONFIG="$1" INCLUDE EXCLUDE IGNORE LINE
-    INCLUDE=$(tmpfile_create input_include.txt)
-    EXCLUDE=$(tmpfile_create input_exclude.txt)
-    IGNORE=$(tmpfile_create input_ignore.txt)
+# Prints an index-like list of all source files to backup
+source_files_list() {
+    local INCLUDE EXCLUDE IGNORE LINE
+    INCLUDE=$(tmpfile_create src-filelist-include.txt)
+    EXCLUDE=$(tmpfile_create src-filelist-exclude.txt)
+    IGNORE=$(tmpfile_create src-filelist-ignore.txt)
     touch "${INCLUDE}" "${EXCLUDE}" "${IGNORE}"
     while IFS= read -r LINE ; do
         [[ "${LINE}" != "" && "${LINE:0:1}" != "#" ]] || continue
@@ -65,7 +63,7 @@ index_input_files() {
         else
             printf "%s\n" "$(trim "${LINE}")" >> "${INCLUDE}"
         fi
-    done < "$CONFIG"
+    done < "${MIXTAPE_DIR}/config"
     if [[ ! -s ${INCLUDE} ]] ; then
         die "no files included in backup"
     fi
@@ -73,123 +71,130 @@ index_input_files() {
     find $(< "${INCLUDE}") \
          $(xargs -L 1 printf '-not ( -path %s -prune ) ' < "${EXCLUDE}") \
          $(xargs -L 1 printf '-not ( -name %s -prune ) ' < "${IGNORE}") \
-         -printf '%M\t%u\t%g\t%TF %.8TT\t%k\t%p\t%l\n' | \
+         -printf '%M\t%u\t%g\t%TF %.8TT\t%k\t%p\t->\t%l\n' | \
          sort --field-separator=$'\t' --key=6,6
+}
+
+# Prints the shasum-matching locations from an index
+source_index_locations() {
+    local INDEX=$1 CONTENT SHASUMS VERIFIED
+    CONTENT=$(tmpfile_create src-index-content.txt)
+    SHASUMS=$(tmpfile_create src-index-shasums.txt)
+    VERIFIED=$(tmpfile_create src-index-verified.txt)
+    xzcat "${INDEX}" | grep ^- > "${CONTENT}"
+    awk -F $'\t' '{print $7 "  " $6}' < "${CONTENT}" > "${SHASUMS}"
+    (sha1sum --check "${SHASUMS}" 2> /dev/null || true) | \
+        grep 'OK$' | cut -d ':' -f 1 > "${VERIFIED}"
+    join -t $'\t' -1 6 -2 1 -o $'1.6\t1.7\t1.8' "${CONTENT}" "${VERIFIED}"
+}
+
+# Prints an index-like list of all source files to backup
+source_files() {
+    local INDEX FILELIST UNSORTED SORTED
+    INDEX=$(index_files "${MIXTAPE_DIR}" last)
+    if [[ -e "${INDEX}" ]] ; then
+        FILELIST=$(tmpfile_create src-filelist.txt)
+        UNSORTED=$(tmpfile_create src-store-unsorted.txt)
+        SORTED=$(tmpfile_create src-store-sorted.txt)
+        source_files_list > "${FILELIST}"
+        source_index_locations "${INDEX}" > "${UNSORTED}"
+        grep ^l "${FILELIST}" | awk -F $'\t' '{print $6 "\t->\t" $8}' >> "${UNSORTED}"
+        sort --field-separator=$'\t' --key=1,1 "${UNSORTED}" > "${SORTED}"
+        join -t $'\t' -a 1 -1 6 -2 1 -o $'1.1\t1.2\t1.3\t1.4\t1.5\t1.6\t2.2\t2.3' \
+             "${FILELIST}" "${SORTED}"
+    else
+        source_files_list
+    fi
+}
+
+# Store small files
+store_small_files() {
+    local DATETIME=$1 FILES=$2 SHASUMS TARFILE SHA FILE
+    SHASUMS=$(tmpfile_create store-shasums.txt)
+    TARFILE=${MIXTAPE_DIR}/data/files/${DATETIME:0:7}/files.${DATETIME}.tar.xz
+    mkdir -p "$(dirname "${TARFILE}")"
+    echo "Storing $(wc -l < "${FILES}") smaller files..." >&2
+    tar -caf "${TARFILE}" -T "${FILES}" 2> /dev/null
+    xargs -L 100 sha1sum < "${FILES}" >> "${SHASUMS}"
+    while read -r SHA FILE ; do
+        printf "%s\t%s\t%s\n" "${FILE}" "${SHA}" "${TARFILE#${MIXTAPE_DIR}/data/}"
+    done < "${SHASUMS}"
+}
+
+# Store large files
+store_large_files() {
+    local FILES=$1 INFILE OUTFILE SHA
+    while IFS= read -r INFILE ; do
+        echo "Storing ${INFILE}..." >&2
+        SHA=$(file_sha1 "${INFILE}")
+        OUTFILE=$(largefile_store "${MIXTAPE_DIR}" "${INFILE}" "${SHA}")
+        printf "%s\t%s\t%s\n" "${INFILE}" "${SHA}" "${OUTFILE#${MIXTAPE_DIR}/data/}"
+    done < "${FILES}"
+}
+
+# Adds files without storage location, but outputs all file locations
+store_files() {
+    local DATETIME=$1 SOURCE_FILES=$2 SMALL LARGE ACCESS SIZEKB FILE SHA LOCATION
+    SMALL=$(tmpfile_create store-small.txt)
+    LARGE=$(tmpfile_create store-large.txt)
+    while IFS=$'\t' read ACCESS _ _ _ SIZEKB FILE SHA LOCATION ; do
+        if [[ ${ACCESS:0:1} == "-" ]] ; then
+            if [[ "${LOCATION}" != "" ]] ; then
+                printf "%s\t%s\t%s\n" "${FILE}" "${SHA}" "${LOCATION}"
+            elif [[ ${SIZEKB} -lt 256 ]] ; then
+                echo "${FILE}" >> "${SMALL}"
+            else
+                echo "${FILE}" >> "${LARGE}"
+            fi
+        elif [[ ${ACCESS:0:1} == "l" ]] ; then
+            printf "%s\t->\t%s\n" "${FILE}" "${LOCATION}"
+        fi
+    done < "${SOURCE_FILES}"
+    if [[ -s "${SMALL}" ]] ; then
+        store_small_files "${DATETIME}" "${SMALL}"
+    fi
+    if [[ -s "${LARGE}" ]] ; then
+        store_large_files "${LARGE}"
+    fi
+}
+
+# Creates the output index
+create_index() {
+    local DATETIME=$1 SOURCE_FILES=$2 LOCATIONS=$3 INDEX SORTED
+    mkdir -p "${MIXTAPE_DIR}/index"
+    INDEX="${MIXTAPE_DIR}/index/index.${DATETIME}.txt"
+    SORTED=$(tmpfile_create store-sorted.txt)
+    sort --field-separator=$'\t' --key=1,1 "${LOCATIONS}" > "${SORTED}"
+    join -t $'\t' -a 1 -1 6 -2 1 -o $'1.1\t1.2\t1.3\t1.4\t1.5\t1.6\t2.2\t2.3' \
+         "${SOURCE_FILES}" "${SORTED}" > "${INDEX}"
+    xz "${INDEX}"
 }
 
 # Program start
 main() {
-    local CONFIG="${MIXTAPE_DIR}/config" ARG
+    local ARG DATETIME SOURCE_FILES LOCATIONS
     checkopts
     if [[ ${#ARGS[@]} -gt 0 ]] ; then
         for ARG in "${ARGS[@]}" ; do
-            config_add "${CONFIG}" "${ARG}"
+            config_add "${ARG}"
         done
-    elif [[ ! -f "${CONFIG}" && -f /etc/mixtape-backup.conf ]] ; then
+    elif [[ ! -f "${MIXTAPE_DIR}/config" && -f /etc/mixtape-backup.conf ]] ; then
         # TODO: Remove this legacy config copying
         while IFS= read -r LINE ; do
             [[ "${LINE}" != "" && "${LINE:0:1}" != "#" ]] || continue
-            config_add "${CONFIG}" "${LINE}"
+            config_add "${LINE}"
         done < /etc/mixtape-backup.conf
     fi
-    [[ -f "${CONFIG}" ]] || usage "no backup files selected"
-    mkdir "${TMP_DIR}"
-    index_input_files "${CONFIG}" > "${INPUT_FILES}"
+    [[ -f "${MIXTAPE_DIR}/config" ]] || usage "no backup files selected"
+    DATETIME=$(index_datetime now file)
+    SOURCE_FILES=$(tmpfile_create src-files.txt)
+    LOCATIONS=$(tmpfile_create store-unsorted.txt)
+    source_files > "${SOURCE_FILES}"
+    store_files "${DATETIME}" "${SOURCE_FILES}" > "${LOCATIONS}"
+    create_index "${DATETIME}" "${SOURCE_FILES}" "${LOCATIONS}"
 }
 
 # Install cleanup handler, parse command-line and launch
 trap tmpfile_cleanup EXIT
 parseargs "$@"
 main
-
-# Unset caution flags
-# TODO: revert this once script converted
-set +o nounset
-set +o errtrace
-set +o errexit
-set +o pipefail
-
-# Global vars
-DATA_DIR=${MIXTAPE_DIR}/data
-INDEX_DIR=${MIXTAPE_DIR}/index
-
-DATE_MONTH=$(date '+%Y-%m')
-DATE_MINUTE=$(date '+%Y-%m-%d-%H%M')
-INPUT_INDEX=$(ls ${INDEX_DIR}/index.????-??-??-????.txt.xz 2> /dev/null | tail -1)
-MATCH_INPUT=${TMP_DIR}/match-input.txt
-MATCH_SHASUM=${TMP_DIR}/match-shasum.txt
-MATCH_UPTODATE=${TMP_DIR}/match-uptodate.txt
-MATCH_LOCATION=${TMP_DIR}/match-location.txt
-MATCH_FILES=${TMP_DIR}/match-files.txt
-STORE_SMALL=${TMP_DIR}/store-small.txt
-STORE_LARGE=${TMP_DIR}/store-large.txt
-STORE_SHASUM=${TMP_DIR}/store-shasum.txt
-STORE_UNSORTED=${TMP_DIR}/store-unsorted.txt
-STORE_SORTED=${TMP_DIR}/store-sorted.txt
-OUTPUT_TARFILE=${DATA_DIR}/files/${DATE_MONTH}/files.${DATE_MINUTE}.tar.xz
-OUTPUT_INDEX=${INDEX_DIR}/index.${DATE_MINUTE}.txt
-
-mkdir -p ${INDEX_DIR} ${DATA_DIR}
-
-# Match to existing index
-if [[ -e "${INPUT_INDEX}" ]] ; then
-    xzcat ${INPUT_INDEX} | grep ^- > ${MATCH_INPUT}
-    awk -F $'\t' '{print $7 "  " $6}' < ${MATCH_INPUT} > ${MATCH_SHASUM}
-    shasum --check ${MATCH_SHASUM} 2> /dev/null | grep 'OK$' | cut -d ':' -f 1 > ${MATCH_UPTODATE}
-    join -t $'\t' -1 6 -2 1 -o $'1.6\t1.7\t1.8' ${MATCH_INPUT} ${MATCH_UPTODATE} >> ${MATCH_LOCATION}
-    join -t $'\t' -a 1 -1 6 -2 1 -o $'1.1\t1.2\t1.3\t1.4\t1.5\t1.6\t2.2\t2.3' \
-         ${INPUT_FILES} ${MATCH_LOCATION} > ${MATCH_FILES}
-else
-    cd $(dirname ${INPUT_FILES}) ; ln -s $(basename ${INPUT_FILES}) $(basename ${MATCH_FILES})
-fi
-
-# Find new/modified files to store
-while IFS=$'\t' read ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
-    TYPE=${ACCESS:0:1}
-    if [[ ${TYPE} == "-" ]] ; then
-        if [[ "${LOCATION}" != "" ]] ; then
-            printf "%s\t%s\t%s\n" "${FILE}" "${SHA}" "${LOCATION}" >> ${STORE_UNSORTED}
-        elif [[ ${SIZEKB} -lt 256 ]] ; then
-            echo ${FILE} >> ${STORE_SMALL}
-        else
-            echo ${FILE} >> ${STORE_LARGE}
-        fi
-    fi
-done < ${MATCH_FILES}
-
-# Store small files
-if [[ -s ${STORE_SMALL} ]] ; then
-    echo "Storing $(wc -l < ${STORE_SMALL}) smaller files..."
-    mkdir -p $(dirname ${OUTPUT_TARFILE})
-    tar -caf ${OUTPUT_TARFILE} -T ${STORE_SMALL} 2> /dev/null
-    xargs -L 100 shasum < ${STORE_SMALL} >> ${STORE_SHASUM}
-    while read SHA FILE ; do
-        printf "%s\t%s\t%s\n" "${FILE}" "${SHA}" "${OUTPUT_TARFILE#${DATA_DIR}/}" >> ${STORE_UNSORTED}
-    done < ${STORE_SHASUM}
-fi
-
-# Store large files
-if [[ -s ${STORE_LARGE} ]] ; then
-    while read INFILE ; do
-        echo "Storing ${INFILE}..."
-        SHA=$(file_sha1 "${INFILE}")
-        OUTFILE=$(largefile_store "${MIXTAPE_DIR}" "${INFILE}" "${SHA}")
-        printf "%s\t%s\t%s\n" "${INFILE}" "${SHA}" "${OUTFILE#${DATA_DIR}/}" >> ${STORE_UNSORTED}
-    done < ${STORE_LARGE}
-fi
-
-# Add symlinks to store
-grep ^l ${INPUT_FILES} | awk -F $'\t' '{print $6 "\t->\t" $7}' >> ${STORE_UNSORTED}
-
-# Build output index
-if [[ -s ${STORE_UNSORTED} ]] ; then
-    sort --field-separator=$'\t' --key=6,6 ${STORE_UNSORTED} > ${STORE_SORTED}
-    join -t $'\t' -a 1 -1 6 -2 1 -o $'1.1\t1.2\t1.3\t1.4\t1.5\t1.6\t2.2\t2.3' \
-         ${MATCH_FILES} ${STORE_SORTED} > ${OUTPUT_INDEX}
-else
-    cp ${MATCH_FILES} ${OUTPUT_INDEX}
-fi
-xz ${OUTPUT_INDEX}
-
-# Cleanup
-rm -rf ${TMP_DIR}
