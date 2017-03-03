@@ -357,10 +357,10 @@ file_access_octal() {
     echo -n "${PERM}"
 }
 
-# Prints the SHA1 hash for a single file (or stdin)
-file_sha1() {
+# Prints the SHA256 hash for a single file (or stdin)
+file_sha256() {
     local FILE="${1:--}" ARR
-    ARR=($(shasum "${FILE}" 2>/dev/null))
+    ARR=($(sha256sum "${FILE}" 2>/dev/null))
     echo -n "${ARR[0]:-}"
 }
 
@@ -386,9 +386,9 @@ largefile_search_sha() {
     SUBSTR=":${SHA}:"
     for FILE in ${DIR}/data/${SHA:0:3}/${SHA:3:3}/* ; do
         if [[ -e ${FILE} ]] ; then
-            FILESHA=":$(file_sha1 "${FILE}"):"
+            FILESHA=":$(file_sha256 "${FILE}"):"
             if [[ ${FILE} == *.xz ]] ; then
-                FILESHA+=":$(xzcat "${FILE}" | file_sha1 -):"
+                FILESHA+=":$(xzcat "${FILE}" | file_sha256 -):"
             fi
             if [[ ${FILESHA} == *"${SUBSTR}"* ]] ; then
                 echo -n "${FILE}"
@@ -402,7 +402,7 @@ largefile_search_sha() {
 largefile_store() {
     local DIR=$1 FILE=$2 SHA=${3:-} OUTFILE
     if [[ -z "${SHA}" ]] ; then
-        SHA=$(file_sha1 "${FILE}")
+        SHA=$(file_sha256 "${FILE}")
     fi
     OUTFILE=$(largefile_search_sha "${DIR}" "${SHA}")
     if [[ ! -e "${OUTFILE}" ]] ; then

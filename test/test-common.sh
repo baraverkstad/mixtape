@@ -3,11 +3,18 @@
 # Runs tests for mixtape-common library.
 #
 
-# Global vars & imports
+# Imports
 TEST_DIR=$(dirname $0)
 source ${TEST_DIR}/assert.sh
 source ${TEST_DIR}/../bin/mixtape-common.sh
 
+# Global vars
+FILE1_LOC="data/33d/847/unsplash#1015-2048x1536.jpg"
+FILE1_SHA="33d8471d7671d4ad9bc9cc661753b02b490fffb6c6b17b5db07837080d83d30e"
+FILE2_LOC="data/68e/24f/loremipsum.txt.xz"
+FILE2_SHA="68e24fba182bb7272ba855b59be46f9fb59fb5e60757d4fd6c6c481e39f0e507"
+
+# Tests the trim function
 test_trim() {
     assert "trim" ""
     assert "trim '    '" ""
@@ -134,7 +141,6 @@ test_index_content_regex() {
 
 # Tests the file_size_human function
 test_file_size_human() {
-    local DIR=${TEST_DIR}/mixtape
     assert "file_size_human 1" "1 K"
     assert "file_size_human 1024" "1.0 M"
     assert "file_size_human 1048576" "1.0 G"
@@ -143,7 +149,7 @@ test_file_size_human() {
     assert "file_size_human 888888" "868 M"
     assert "file_size_human 8888888" "8.5 G"
     assert "file_size_human 88888888" "85 G"
-    assert "file_size_human ${DIR}/data/bff/f42/unsplash#1015-2048x1536.jpg" "552 K"
+    assert "file_size_human ${TEST_DIR}/mixtape/${FILE1_LOC}" "552 K"
 }
 
 # Tests the file_access_octal function
@@ -162,13 +168,12 @@ test_file_access_octal() {
     assert "file_access_octal '-r--'" "0400"
 }
 
-# Tests the file_sha1 function
-test_file_sha1() {
-    local FILE="${TEST_DIR}/mixtape/data/bff/f42/unsplash#1015-2048x1536.jpg"
-    assert "file_sha1 ${FILE}" "bfff4213a7adcb1c33e76f78484a167fe2848113"
-    assert "file_sha1 does.not.exist" ""
-    assert_raises "file_sha1 does.not.exist" 0
-    assert "echo test | file_sha1" "4e1243bd22c66e76c2ba9eddc1f91394e57f9f83"
+# Tests the file_sha256 function
+test_file_sha256() {
+    assert "file_sha256 ${TEST_DIR}/mixtape/${FILE1_LOC}" "${FILE1_SHA}"
+    assert "file_sha256 does.not.exist" ""
+    assert_raises "file_sha256 does.not.exist" 0
+    assert "echo test | file_sha256" "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2"
 }
 
 # Tests the tmpfile_create and tmpfile_cleanup functions
@@ -188,30 +193,27 @@ test_tmpfile_create() {
 # Tests the largefile_search_sha function
 test_largefile_search_sha() {
     DIR=${TEST_DIR}/mixtape
-    SHA1="bfff4213a7adcb1c33e76f78484a167fe2848113"
-    SHA2="eb7faf0b51528980753879c8e51d1f59e0e9c630"
-    SHA3="43cca6b738ba9a1f3d86875a21cdbb419cbdd5f1"
-    assert "largefile_search_sha ${DIR} ${SHA1}" "${DIR}/data/bff/f42/unsplash#1015-2048x1536.jpg"
-    assert "largefile_search_sha ${DIR} ${SHA2}" "${DIR}/data/eb7/faf/loremipsum.txt.xz"
-    assert "largefile_search_sha ${DIR} ${SHA3}" ""
+    TEST_SHA="f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2"
+    assert "largefile_search_sha ${DIR} ${FILE1_SHA}" "${DIR}/${FILE1_LOC}"
+    assert "largefile_search_sha ${DIR} ${FILE2_SHA}" "${DIR}/${FILE2_LOC}"
+    assert "largefile_search_sha ${DIR} ${TEST_SHA}" ""
 }
 
 # Tests the largefile_store function
 test_largefile_store() {
     DIR=${TEST_DIR}/tmp-$$
-    SRC1="${TEST_DIR}/mixtape/data/bff/f42/unsplash#1015-2048x1536.jpg"
+    SRC1="${TEST_DIR}/mixtape/${FILE1_LOC}"
     SRC2="${DIR}/dummy-copy.jpg"
     SRC3="${DIR}/loremipsum.txt"
-    DST1="${DIR}/data/bff/f42/unsplash#1015-2048x1536.jpg"
-    DST2="${DIR}/data/eb7/faf/loremipsum.txt.xz"
-    SHA1="bfff4213a7adcb1c33e76f78484a167fe2848113"
+    DST1="${DIR}/${FILE1_LOC}"
+    DST2="${DIR}/${FILE2_LOC}"
     mkdir -p ${DIR}
     cp ${SRC1} ${SRC2}
-    xzcat "${TEST_DIR}/mixtape/data/eb7/faf/loremipsum.txt.xz" > ${SRC3}
+    xzcat "${TEST_DIR}/mixtape/${FILE2_LOC}" > ${SRC3}
     assert "largefile_store ${DIR} ${SRC1}" "${DST1}"
     assert "largefile_store ${DIR} ${SRC2}" "${DST1}"
     assert "largefile_store ${DIR} ${SRC3}" "${DST2}"
-    assert "largefile_store ${DIR} ${SRC3} ${SHA1}" "${DST1}"
+    assert "largefile_store ${DIR} ${SRC3} ${FILE1_SHA}" "${DST1}"
     assert "find ${DIR}/data -type f | wc -l" "2"
     assert_raises "cmp --quiet ${SRC1} ${DST1}" 0
     assert_raises "cmp --quiet ${SRC2} ${DST1}" 0
@@ -222,19 +224,17 @@ test_largefile_store() {
 # Tests the largefile_restore function
 test_largefile_restore() {
     DIR=${TEST_DIR}/tmp-$$
-    SRC1="${TEST_DIR}/mixtape/data/bff/f42/unsplash#1015-2048x1536.jpg"
-    SRC2="${TEST_DIR}/mixtape/data/eb7/faf/loremipsum.txt.xz"
+    SRC1="${TEST_DIR}/mixtape/${FILE1_LOC}"
+    SRC2="${TEST_DIR}/mixtape/${FILE2_LOC}"
     DST1="${DIR}/sub/dir/unsplash#1015-2048x1536.jpg"
     DST2="${DIR}/sub/dir/loremipsum.txt"
-    SHA1="bfff4213a7adcb1c33e76f78484a167fe2848113"
-    SHA2="eb7faf0b51528980753879c8e51d1f59e0e9c630"
     mkdir -p ${DIR}
     assert_raises "largefile_restore ${SRC1} ${DST1}" 0
     assert_raises "largefile_restore ${SRC2} ${DST2}" 0
     assert "find ${DIR} -type f | wc -l" "2"
     assert "find ${DIR} -type d | tail -1" "${DIR}/sub/dir"
-    assert "file_sha1 ${DST1}" "${SHA1}"
-    assert "file_sha1 ${DST2}" "${SHA2}"
+    assert "file_sha256 ${DST1}" "${FILE1_SHA}"
+    assert "file_sha256 ${DST2}" "${FILE2_SHA}"
     rm -rf ${DIR}
 }
 

@@ -83,9 +83,19 @@ source_index_locations() {
     VERIFIED=$(tmpfile_create src-index-verified.txt)
     xzcat "${INDEX}" | grep ^- > "${CONTENT}"
     awk -F $'\t' '{print $7 "  " $6}' < "${CONTENT}" > "${SHASUMS}"
-    (sha1sum --check "${SHASUMS}" 2> /dev/null || true) | \
-        grep 'OK$' | cut -d ':' -f 1 > "${VERIFIED}"
+    (sha256sum --check "${SHASUMS}" | grep 'OK$' | cut -d ':' -f 1) 2> /dev/null || true > "${VERIFIED}"
     join -t $'\t' -1 6 -2 1 -o $'1.6\t1.7\t1.8' "${CONTENT}" "${VERIFIED}"
+    # TODO: Remove legacy sha1 -> sha256 conversion
+    (sha1sum --check "${SHASUMS}" | grep 'OK$' | cut -d ':' -f 1) 2> /dev/null || true > "${VERIFIED}"
+    if [[ -s "${VERIFIED}" ]] ; then
+        SHASUMS=$(tmpfile_create src-sha256-sums.txt)
+        xargs -L 100 sha256sum < "${VERIFIED}" > "${SHASUMS}"
+        VERIFIED=$(tmpfile_create src-sha256-store.txt)
+        while read -r SHA FILE ; do
+            printf "%s\t%s\n" "${FILE}" "${SHA}"
+        done < "${SHASUMS}" > "${VERIFIED}"
+        join -t $'\t' -1 6 -2 1 -o $'1.6\t2.2\t1.8' "${CONTENT}" "${VERIFIED}"
+    fi
 }
 
 # Prints an index-like list of all source files to backup
@@ -115,7 +125,7 @@ store_small_files() {
     mkdir -p "$(dirname "${TARFILE}")"
     echo "Storing $(wc -l < "${FILES}") smaller files..." >&2
     tar -caf "${TARFILE}" -T "${FILES}" 2> /dev/null
-    xargs -L 100 sha1sum < "${FILES}" >> "${SHASUMS}"
+    xargs -L 100 sha256sum < "${FILES}" > "${SHASUMS}"
     while read -r SHA FILE ; do
         printf "%s\t%s\t%s\n" "${FILE}" "${SHA}" "${TARFILE#${MIXTAPE_DIR}/data/}"
     done < "${SHASUMS}"
@@ -126,7 +136,7 @@ store_large_files() {
     local FILES=$1 INFILE OUTFILE SHA
     while IFS= read -r INFILE ; do
         echo "Storing ${INFILE}..." >&2
-        SHA=$(file_sha1 "${INFILE}")
+        SHA=$(file_sha256 "${INFILE}")
         OUTFILE=$(largefile_store "${MIXTAPE_DIR}" "${INFILE}" "${SHA}")
         printf "%s\t%s\t%s\n" "${INFILE}" "${SHA}" "${OUTFILE#${MIXTAPE_DIR}/data/}"
     done < "${FILES}"

@@ -8,7 +8,7 @@ Practical backups. The Unix toolkit way.
 Mixtape is (in many ways) an improvement over the old backup practices of
 using `tar` or `rsync`. Here are some of the reasons to consider:
 
-- **Deduplicated data** — Large files are stored using their `sha1sum` to
+- **Deduplicated data** — Large files are stored using their `sha256sum` to
   avoid duplicating them on successive backups. In practice, this often
   provides sufficient deduplication to make backups fast and space-efficient.
 

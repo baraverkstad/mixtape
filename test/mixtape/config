@@ -1,0 +1,10 @@
+# Configuration of backup includes and excludes.
+#
+# /dir             includes '/dir' into backup
+# - /dir/subdir    excludes '/dir/subdir' from backup
+# - name           excludes all 'name' files and dirs
+
+- .git
+- .hg
+- .svn
+/test
