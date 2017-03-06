@@ -68,7 +68,7 @@ source_files_list() {
         die "no files included in backup"
     fi
     # shellcheck disable=SC2046
-    find $(< "${INCLUDE}") \
+    find $(sort "${INCLUDE}" | uniq) \
          $(xargs -L 1 printf '-not ( -path %s -prune ) ' < "${EXCLUDE}") \
          $(xargs -L 1 printf '-not ( -name %s -prune ) ' < "${IGNORE}") \
          -printf '%M\t%u\t%g\t%TF %.8TT\t%k\t%p\t->\t%l\n' | \
