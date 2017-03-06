@@ -81,7 +81,7 @@ source_index_locations() {
     CONTENT=$(tmpfile_create src-index-content.txt)
     SHASUMS=$(tmpfile_create src-index-shasums.txt)
     VERIFIED=$(tmpfile_create src-index-verified.txt)
-    xzcat "${INDEX}" | grep ^- > "${CONTENT}"
+    (xzcat "${INDEX}" | grep ^- > "${CONTENT}") || true
     awk -F $'\t' '{print $7 "  " $6}' < "${CONTENT}" > "${SHASUMS}"
     (sha256sum --check "${SHASUMS}" | grep 'OK$' | cut -d ':' -f 1) 2> /dev/null || true > "${VERIFIED}"
     join -t $'\t' -1 6 -2 1 -o $'1.6\t1.7\t1.8' "${CONTENT}" "${VERIFIED}"
@@ -108,7 +108,7 @@ source_files() {
         SORTED=$(tmpfile_create src-store-sorted.txt)
         source_files_list > "${FILELIST}"
         source_index_locations "${INDEX}" > "${UNSORTED}"
-        grep ^l "${FILELIST}" | awk -F $'\t' '{print $6 "\t->\t" $8}' >> "${UNSORTED}"
+        (grep ^l "${FILELIST}" | awk -F $'\t' '{print $6 "\t->\t" $8}' >> "${UNSORTED}") || true
         sort --field-separator=$'\t' --key=1,1 "${UNSORTED}" > "${SORTED}"
         join -t $'\t' -a 1 -1 6 -2 1 -o $'1.1\t1.2\t1.3\t1.4\t1.5\t1.6\t2.2\t2.3' \
              "${FILELIST}" "${SORTED}"
