@@ -19,6 +19,7 @@ VERSION=0.6
 ARGS=()
 OPTS=()
 DEBUG=false
+QUIET=false
 
 # Directory variables
 DEFAULT_BACKUP_DIR=/backup
@@ -56,9 +57,14 @@ warn() {
     logger -p local0.warning -t "${PROGRAM_ID}" -- "$@" || true
 }
 
-# Logs a message to stdout (if DEBUG is true)
+# Prints a message to stderr (if QUIET is false)
+info() {
+    ${QUIET} || echo "$@" >&2
+}
+
+# Prints a debug message to stderr (if DEBUG is true)
 debug() {
-    (${DEBUG} && echo "$(date +'%F %T'):" "$@") || true
+    (${DEBUG} && echo "$(date +'%F %T'):" "$@" >&2) || true
 }
 
 # Prints command-line usage info and exits
@@ -101,6 +107,16 @@ parseargs() {
             ;;
         --version)
             versioninfo
+            ;;
+        --debug)
+            DEBUG=true
+            QUIET=false
+            break
+            ;;
+        --quiet)
+            DEBUG=false
+            QUIET=true
+            break
             ;;
         --backup-dir=*)
             BACKUP_DIR=$(realpath "${1#*=}" 2>/dev/null)

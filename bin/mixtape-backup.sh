@@ -34,6 +34,7 @@ config_add() {
     local PATTERN=$1
     mkdir -p "${MIXTAPE_DIR}"
     if [[ ! -f "${MIXTAPE_DIR}/config" ]] ; then
+        debug "creating default ${MIXTAPE_DIR}/config"
         config_default > "${MIXTAPE_DIR}/config"
     fi
     if [[ "${PATTERN}" == "-"* ]] ; then
@@ -88,6 +89,7 @@ source_index_locations() {
     # TODO: Remove legacy sha1 -> sha256 conversion
     (sha1sum --check "${SHASUMS}" | grep 'OK$' | cut -d ':' -f 1) > "${VERIFIED}" 2> /dev/null || true
     if [[ -s "${VERIFIED}" ]] ; then
+        debug "converting index from SHA1 to SHA256"
         SHASUMS=$(tmpfile_create src-sha256-sums.txt)
         xargs -L 100 sha256sum < "${VERIFIED}" > "${SHASUMS}"
         VERIFIED=$(tmpfile_create src-sha256-store.txt)
@@ -102,12 +104,15 @@ source_index_locations() {
 source_files() {
     local INDEX FILELIST UNSORTED SORTED
     INDEX=$(index_files "${MIXTAPE_DIR}" last)
+    info "${COLOR_WARN}Backup dir:${COLOR_RESET}    ${MIXTAPE_DIR}"
+    info "${COLOR_WARN}Input index:${COLOR_RESET}   ${INDEX:----}"
     if [[ -e "${INDEX}" ]] ; then
         FILELIST=$(tmpfile_create src-filelist.txt)
         UNSORTED=$(tmpfile_create src-store-unsorted.txt)
         SORTED=$(tmpfile_create src-store-sorted.txt)
         source_files_list > "${FILELIST}"
         source_index_locations "${INDEX}" > "${UNSORTED}"
+        debug "unmodified files: $(grep -c ^ "${UNSORTED}") of $(grep -c ^- "${FILELIST}")"
         (grep ^l "${FILELIST}" | awk -F $'\t' '{print $6 "\t->\t" $8}' >> "${UNSORTED}") || true
         sort --field-separator=$'\t' --key=1,1 "${UNSORTED}" > "${SORTED}"
         join -t $'\t' -a 1 -1 6 -2 1 -o $'1.1\t1.2\t1.3\t1.4\t1.5\t1.6\t2.2\t2.3' \
@@ -123,7 +128,7 @@ store_small_files() {
     SHASUMS=$(tmpfile_create store-shasums.txt)
     TARFILE=${MIXTAPE_DIR}/data/files/${DATETIME:0:7}/files.${DATETIME}.tar.xz
     mkdir -p "$(dirname "${TARFILE}")"
-    echo "Storing $(wc -l < "${FILES}") smaller files..." >&2
+    debug "storing to ${TARFILE#${MIXTAPE_DIR}/}..."
     tar -caf "${TARFILE}" -T "${FILES}" 2> /dev/null
     xargs -L 100 sha256sum < "${FILES}" > "${SHASUMS}"
     while read -r SHA FILE ; do
@@ -135,7 +140,7 @@ store_small_files() {
 store_large_files() {
     local FILES=$1 INFILE OUTFILE SHA
     while IFS= read -r INFILE ; do
-        echo "Storing ${INFILE}..." >&2
+        debug "storing ${INFILE}"
         SHA=$(file_sha256 "${INFILE}")
         OUTFILE=$(largefile_store "${MIXTAPE_DIR}" "${INFILE}" "${SHA}")
         printf "%s\t%s\t%s\n" "${INFILE}" "${SHA}" "${OUTFILE#${MIXTAPE_DIR}/data/}"
@@ -147,6 +152,7 @@ store_files() {
     local DATETIME=$1 SOURCE_FILES=$2 SMALL LARGE ACCESS SIZEKB FILE SHA LOCATION
     SMALL=$(tmpfile_create store-small.txt)
     LARGE=$(tmpfile_create store-large.txt)
+    touch "${SMALL}" "${LARGE}"
     while IFS=$'\t' read ACCESS _ _ _ SIZEKB FILE SHA LOCATION ; do
         if [[ ${ACCESS:0:1} == "-" ]] ; then
             if [[ "${LOCATION}" != "" ]] ; then
@@ -160,9 +166,11 @@ store_files() {
             printf "%s\t->\t%s\n" "${FILE}" "${LOCATION}"
         fi
     done < "${SOURCE_FILES}"
+    info "${COLOR_WARN}Small storage:${COLOR_RESET} adding $(wc -l < "${SMALL}") file(s)"
     if [[ -s "${SMALL}" ]] ; then
         store_small_files "${DATETIME}" "${SMALL}"
     fi
+    info "${COLOR_WARN}Large storage:${COLOR_RESET} adding $(wc -l < "${LARGE}") file(s)"
     if [[ -s "${LARGE}" ]] ; then
         store_large_files "${LARGE}"
     fi
@@ -174,6 +182,7 @@ create_index() {
     mkdir -p "${MIXTAPE_DIR}/index"
     INDEX="${MIXTAPE_DIR}/index/index.${DATETIME}.txt"
     SORTED=$(tmpfile_create store-sorted.txt)
+    info "${COLOR_WARN}Output index:${COLOR_RESET}  ${INDEX#${MIXTAPE_DIR}/index/}.xz"
     sort --field-separator=$'\t' --key=1,1 "${LOCATIONS}" > "${SORTED}"
     join -t $'\t' -a 1 -1 6 -2 1 -o $'1.1\t1.2\t1.3\t1.4\t1.5\t1.6\t2.2\t2.3' \
          "${SOURCE_FILES}" "${SORTED}" > "${INDEX}"
