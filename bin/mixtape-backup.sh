@@ -83,10 +83,10 @@ source_index_locations() {
     VERIFIED=$(tmpfile_create src-index-verified.txt)
     (xzcat "${INDEX}" | grep ^- > "${CONTENT}") || true
     awk -F $'\t' '{print $7 "  " $6}' < "${CONTENT}" > "${SHASUMS}"
-    (sha256sum --check "${SHASUMS}" | grep 'OK$' | cut -d ':' -f 1) 2> /dev/null || true > "${VERIFIED}"
+    (sha256sum --check "${SHASUMS}" | grep 'OK$' | cut -d ':' -f 1) > "${VERIFIED}" 2> /dev/null || true
     join -t $'\t' -1 6 -2 1 -o $'1.6\t1.7\t1.8' "${CONTENT}" "${VERIFIED}"
     # TODO: Remove legacy sha1 -> sha256 conversion
-    (sha1sum --check "${SHASUMS}" | grep 'OK$' | cut -d ':' -f 1) 2> /dev/null || true > "${VERIFIED}"
+    (sha1sum --check "${SHASUMS}" | grep 'OK$' | cut -d ':' -f 1) > "${VERIFIED}" 2> /dev/null || true
     if [[ -s "${VERIFIED}" ]] ; then
         SHASUMS=$(tmpfile_create src-sha256-sums.txt)
         xargs -L 100 sha256sum < "${VERIFIED}" > "${SHASUMS}"
