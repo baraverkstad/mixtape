@@ -82,7 +82,7 @@ source_index_locations() {
     CONTENT=$(tmpfile_create src-index-content.txt)
     SHASUMS=$(tmpfile_create src-index-shasums.txt)
     VERIFIED=$(tmpfile_create src-index-verified.txt)
-    (xzcat "${INDEX}" | grep ^- > "${CONTENT}") || true
+    xzgrep ^- "${INDEX}" > "${CONTENT}" || true
     awk -F $'\t' '{print $7 "  " $6}' < "${CONTENT}" > "${SHASUMS}"
     (sha256sum --check "${SHASUMS}" | grep 'OK$' | cut -d ':' -f 1) > "${VERIFIED}" 2> /dev/null || true
     join -t $'\t' -1 6 -2 1 -o $'1.6\t1.7\t1.8' "${CONTENT}" "${VERIFIED}"
