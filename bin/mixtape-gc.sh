@@ -106,7 +106,7 @@ store_check() {
     diff --new-line-format="" --unchanged-line-format="" "${LOCATIONS}" "${FILES}" > "${MISREF}" || true
     for FILE in $(< "${UNREF}") ; do
         debug "unreferenced file: ${FILE}"
-        rm ${MIXTAPE_DIR}/data/${FILE}
+        rm "${MIXTAPE_DIR}/data/${FILE}"
     done
     info "    - Removed $(wc -l < "${UNREF}") file(s) from storage"
     for FILE in $(< "${MISREF}") ; do
