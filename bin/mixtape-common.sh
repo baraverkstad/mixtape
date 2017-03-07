@@ -11,7 +11,7 @@ set -o pipefail
 
 # Program & version variables
 PROGRAM=$0
-PROGRAM_NAME=${PROGRAM%.sh}
+PROGRAM_NAME=$(basename "${PROGRAM}" .sh)
 PROGRAM_ID="${PROGRAM_NAME}[$$]"
 VERSION=0.7
 
