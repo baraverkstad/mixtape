@@ -1,29 +1,25 @@
-# mixtape-backup
+# mixtape-status
 
-Stores files into the backup.
+Prints a backup status summary or a summary for a specified index.
 
 
 ## Usage:
 
-> `mixtape-backup [<path> ...]`
+> `mixtape-status [<index>]`
 
-Performs a recursive backup of one or more `<path>` directories (or
-files). The `<path>` arguments are only required on the first run.
-Subsequent runs will reuse the previously specified paths
-(optionally adding new ones from the command-line).
+Prints a backup status summary or a summary for a specified `<index>`.
 
-Specific file names or subdirs may be excluded by prefixing with a
-`-` character.
+The `<index>` can be specified as an index id (e.g. `@586efbc4`), a named
+search (e.g. `first`, `last`) or partial timestamp (e.g. `2017-01`) with
+optional glob matching (e.g. `20??-*-01`).
+
 
 | Options               | Description                                               |
 | --------------------- | --------------------------------------------------------- |
 | `--backup-dir=<dir>`  | Sets the root backup dir, instead of `/backup`            |
-| `--debug`             | Enables more output (verbose mode)                        |
 | `--help`              | Prints help information (and quits)                       |
 | `--mixtape-dir=<dir>` | Sets the mixtape dir, instead of `/backup/<host>/mixtape` |
 | `--version`           | Prints version information (and quits)                    |
-| `--quiet`             | Disables normal output (quiet mode)                       |
-
 
 
 ## See also:
