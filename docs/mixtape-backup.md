@@ -1,6 +1,6 @@
 # mixtape-backup
 
-Stores copies of files to a backup.
+Stores files into the backup.
 
 
 ## Usage:
