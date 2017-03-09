@@ -69,7 +69,7 @@ previous backups.
 
 
 ## Index files
-##
+
 The index files contains a list of all files and directories backed up at a
 specific point in time. The files are tab-separated text files with columns
 for all the file meta-data saved, including the `sha256sum` of each file
@@ -98,7 +98,7 @@ longer referenced by any index.
 
 
 ## Data files
-##
+
 The `data` directory contains copies of the actual files backed up. Smaller
 files (less than 256 KB in size) are stored into `tar.xz` archives under
 the `data/files/<year>-<month>/` directory. Only new or modified files are
