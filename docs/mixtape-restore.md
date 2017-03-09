@@ -1,19 +1,25 @@
-# mixtape-backup
+# mixtape-restore
 
-Stores files into the backup.
+Restores files from the backup.
 
 
 ## Usage:
 
-> `mixtape-backup [<path> ...]`
+> `mixtape-restore <index> <path>`
 
-Performs a recursive backup of one or more `<path>` directories (or files).
-The `<path>` arguments are only required on the first run. Subsequent runs
-will reuse the previously specified paths (optionally adding new ones from
-the command-line).
+Recursively restores all files in `<path>` found inside a single backup
+`<index>`. The `<index>` can be specified as an index id (e.g.
+`@586efbc4`), a named search (e.g. `first`, `last`) or unique timestamp
+(e.g. `2017-01-01`).
 
-Specific file names or subdirs may be excluded by prefixing with a `-`
-character.
+The `<path>` should be the absolute file path for files to restore (e.g.
+`/etc`). Use `/` to restore all files. An initial `/` char will be added if
+missing.
+
+The files are restored into a restore directory matching the index file
+name (e.g. `/backup/<host>/mixtape/restore-2017-01-19-0846/`). This makes
+it possible to combine multiple partial restores from the same index into a
+single directory.
 
 | Options               | Description                                               |
 | --------------------- | --------------------------------------------------------- |

@@ -21,14 +21,14 @@ avoid Mixtape for your backups.
 
 Mixtape is provided as a set of command-line tools:
 
-| Command                                  | Description                    |
-| ---------------------------------------- | ------------------------------ |
-| [mixtape-backup](docs/mixtape-backup.md) | Stores files into the backup   |
-| mixtape-gc                               | Removes older backups files    |
-| mixtape-list                             | Lists backups and content      |
-| mixtape-restore                          | Restores files from the backup |
-| mixtape-search                           | Searches for matching files    |
-| [mixtape-status](docs/mixtape-status.md) | Prints a backup status summary |
+| Command                                    | Description                    |
+| ------------------------------------------ | ------------------------------ |
+| [mixtape-backup](docs/mixtape-backup.md)   | Stores files into the backup   |
+| mixtape-gc                                 | Removes older backups files    |
+| mixtape-list                               | Lists backups and content      |
+| [mixtape-restore](docs/mixtape-restore.md) | Restores files from the backup |
+| [mixtape-search](docs/mixtape-search.md)   | Searches for matching files    |
+| [mixtape-status](docs/mixtape-status.md)   | Prints a backup status summary |
 
 Please check the [backup storage structure](docs/storage.md) documentation
 to better understand the terminology and file structure.
