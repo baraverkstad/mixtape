@@ -2,25 +2,27 @@
 #
 # Searches for matching files in the backup.
 #
-# Syntax: mixtape-search [<options>] [<index>] <file>
+# Syntax: mixtape-search [<index>] <file>
 #
 # Arguments:
-#   <index>          An optional index id (e.g. "@586efbc4"), named search
-#                    (e.g. "all", "first", "last") or partial timestamp (e.g.
-#                    "2017-01") with optional glob matching (e.g. "20??-*-01").
-#                    If not specified, "all" is assumed.
-#   <file>           A file name or path search pattern with optional glob
-#                    matching (e.g. "/etc/**/*.sh). Avoid shell expansion of
-#                    the pattern by using quotes (i.e. "pattern"). A pattern
-#                    starting with "/" will match from the beginning of the
-#                    file path (i.e. an absolute file path).
+#   <index>           An optional index id (e.g. "@586efbc4"), named search
+#                     (e.g. "all", "first", "last") or partial timestamp (e.g.
+#                     "2017-01") with optional glob matching (e.g. "20??-*-01").
+#                     If not specified, "all" is assumed.
+#   <file>            A file name or path search pattern with optional glob
+#                     matching (e.g. "/etc/**/*.sh). Avoid shell expansion of
+#                     the pattern by using quotes (i.e. "pattern"). A pattern
+#                     starting with "/" will match from the beginning of the
+#                     file path (i.e. an absolute file path).
 #
 # Options:
-#   --first          Prints meta-data from the first backup of each version of
-#                    the files matched (this is the default).
-#   --last           Prints meta-data from the last backup of each version of
-#                    the files matched.
-#   --all            Prints meta-data from all backups of the files matched.
+#   --all             Prints all file versions matched
+#   --newest          Prints the newest file versions matched
+#   --oldest          Prints the oldest file versions matched (default)
+#   --backup-dir=...  Use other root backup dir, instead of /backup
+#   --mixtape-dir=... Use other mixtape dir, instead of /backup/<host>/mixtape
+#   --help            Prints help information (and quits)
+#   --version         Prints version information (and quits)
 #
 
 # Import common functions
@@ -59,8 +61,8 @@ index_print() {
 # Program start
 main() {
     local FILTER="uniq -f 6" SORTKEY="1,1" INDEX FILEGLOB
-    checkopts --first --last --all
-    if parseopt --last ; then
+    checkopts --all --newest --oldest
+    if parseopt --newest ; then
         SORTKEY="1,1r"
     fi
     if parseopt --all ; then
