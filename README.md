@@ -24,8 +24,8 @@ Mixtape is provided as a set of command-line tools:
 | Command                                    | Description                    |
 | ------------------------------------------ | ------------------------------ |
 | [mixtape-backup](docs/mixtape-backup.md)   | Stores files into the backup   |
-| mixtape-gc                                 | Removes older backups files    |
-| mixtape-list                               | Lists backups and content      |
+| [mixtape-gc](docs/mixtape-gc.md)           | Removes expired backups        |
+| [mixtape-list](docs/mixtape-list.md)       | Lists backups and content      |
 | [mixtape-restore](docs/mixtape-restore.md) | Restores files from the backup |
 | [mixtape-search](docs/mixtape-search.md)   | Searches for matching files    |
 | [mixtape-status](docs/mixtape-status.md)   | Prints a backup status summary |

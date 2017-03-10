@@ -9,7 +9,9 @@ understand. This documents outlines the basics.
 By default, Mixtape backups are stored and accessed from the following
 default location:
 
-> `/backup/<host>/mixtape`
+```
+/backup/<host>/mixtape
+```
 
 The `--backup-dir=<dir>` option (to all commands) allows replacing the
 `/backup` part of this location. Similarily, the `--mixtape-dir=<dir>`
