@@ -5,7 +5,7 @@ Stores files into the backup.
 
 ## Usage:
 
-> `mixtape-backup [<path> ...]`
+    mixtape-backup [<path> ...]
 
 Performs a recursive backup of one or more `<path>` directories (or files).
 The `<path>` arguments are only required on the first run. Subsequent runs

@@ -5,7 +5,7 @@ Searches for matching files in the backup.
 
 ## Usage:
 
-> `mixtape-search [<index>] <file>`
+    mixtape-search [<index>] <file>
 
 Searches the backups for all files matching the `<file>` name or path. The
 search can be limited to one or more `<index>` files, either with and index

@@ -5,7 +5,7 @@ Prints a backup status summary or a summary for a specified index.
 
 ## Usage:
 
-> `mixtape-status [<index>]`
+    mixtape-status [<index>]
 
 Prints a backup status summary or a summary for a specified `<index>`.
 

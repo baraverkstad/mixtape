@@ -9,9 +9,7 @@ understand. This documents outlines the basics.
 By default, Mixtape backups are stored and accessed from the following
 default location:
 
-```
-/backup/<host>/mixtape
-```
+    /backup/<host>/mixtape
 
 The `--backup-dir=<dir>` option (to all commands) allows replacing the
 `/backup` part of this location. Similarily, the `--mixtape-dir=<dir>`
@@ -22,23 +20,21 @@ option replaces the whole location with a specified directory.
 
 Below is an example of a small Mixtape backup directory:
 
-```
-+- config
-+- index/
-|   +- index.2017-01-19-0846.txt.xz
-|   +- index.2017-01-20-1149.txt.xz
-+- data/
-    +- 33d/
-    |   +- 847/
-    |       +- image.jpg
-    +- 68e/
-    |   +- 24f/
-    |       +- long.txt.xz
-    +- files/
-        +- 2017-03/
-            +- files.2017-01-19-0846.tar.xz
-            +- files.2017-01-20-1149.tar.xz
-```
+    +- config
+    +- index/
+    |   +- index.2017-01-19-0846.txt.xz
+    |   +- index.2017-01-20-1149.txt.xz
+    +- data/
+        +- 33d/
+        |   +- 847/
+        |       +- image.jpg
+        +- 68e/
+        |   +- 24f/
+        |       +- long.txt.xz
+        +- files/
+            +- 2017-03/
+                +- files.2017-01-19-0846.tar.xz
+                +- files.2017-01-20-1149.tar.xz
 
 
 ## Configuration file

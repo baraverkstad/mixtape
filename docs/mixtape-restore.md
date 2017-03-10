@@ -5,7 +5,7 @@ Restores files from the backup.
 
 ## Usage:
 
-> `mixtape-restore <index> <path>`
+    mixtape-restore <index> <path>
 
 Recursively restores all files in `<path>` found inside a single backup
 `<index>`. The `<index>` can be specified as an index id (e.g.
