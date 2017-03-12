@@ -3,9 +3,9 @@
 all:	test dist
 
 dist:
-	./build.sh
-	shellcheck dist/*
+	./build-dist.sh
+	shellcheck dist/bin/*
 
 test:
-	shellcheck bin/*
 	test/test-common.sh
+	shellcheck bin/*

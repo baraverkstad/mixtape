@@ -6,7 +6,6 @@
 # Global vars & imports
 DIR=$(dirname $0)
 COMMON=${DIR}/bin/mixtape-common.sh
-source ${COMMON}
 
 # Checks if a function is used by a script
 func_in_use() {
@@ -44,9 +43,9 @@ print_common_inlined() {
         *"() {")
             FUNC=${LINE%%()*}
             if func_in_use "${FUNC}" "${SCRIPT}" ; then
-    	        [[ -n ${COMMENT} ]] && echo "${COMMENT}" || true
-    	        echo "${LINE}"
-	        ECHO=true
+                [[ -n ${COMMENT} ]] && echo "${COMMENT}" || true
+                echo "${LINE}"
+                ECHO=true
                 COMMENT=
             else
                 ECHO=false
@@ -54,22 +53,22 @@ print_common_inlined() {
             fi
             ;;
         "}")
-    	    ${ECHO} && echo "${LINE}" || true
+            ${ECHO} && echo "${LINE}" || true
             ;;
         "#"*)
             COMMENT="${LINE}"
             ;;
         "")
-    	    ${ECHO} && echo || true
-	    ECHO=true
+            ${ECHO} && echo || true
+            ECHO=true
             COMMENT=
             ;;
         *)
-    	    ${ECHO} && [[ -n ${COMMENT} ]] && echo "${COMMENT}" || true
-    	    ${ECHO} && echo "${LINE}" || true
+            ${ECHO} && [[ -n ${COMMENT} ]] && echo "${COMMENT}" || true
+            ${ECHO} && echo "${LINE}" || true
             COMMENT=
             ;;
-	esac
+        esac
     done < ${COMMON}
 }
 
@@ -91,17 +90,17 @@ print_inlined_script() {
     done < ${SCRIPT}
 }
 
-build_dist() {
-    local FILE= NAME= DIST="${DIR}/dist"
-    rm -rf ${DIST}
-    mkdir -p ${DIST}
-    for FILE in ${DIR}/bin/*.sh ; do
-        NAME=${FILE##*/}
-        if [[ ${NAME} != "mixtape-common.sh" ]] ; then
-            print_inlined_script ${FILE} > ${DIST}/${NAME%%.sh}
+# Program start
+main() {
+    local FILE
+    rm -rf dist
+    mkdir -p dist/bin
+    for FILE in bin/*.sh ; do
+        if [[ ${FILE} != */mixtape-common.sh ]] ; then
+            print_inlined_script ${FILE} > dist/${FILE%%.sh}
         fi
     done
-    chmod +x ${DIST}/*
+    chmod +x dist/bin/*
 }
 
-build_dist
+main
