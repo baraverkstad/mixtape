@@ -11,6 +11,8 @@
 #                     excluded by prefixing with a '-' char.
 #
 # Options:
+#   --store-all       Stores copies of all files, duplicating file data
+#   --store-modified  Stores copies of modified or new files (default)
 #   --debug           Enables more output (verbose mode)
 #   --quiet           Disables normal output (quiet mode)
 #   --backup-dir=...  Use other root backup dir, instead of /backup
@@ -110,10 +112,7 @@ source_index_locations() {
 
 # Prints an index-like list of all source files to backup
 source_files() {
-    local INDEX FILELIST UNSORTED SORTED
-    INDEX=$(index_files "${MIXTAPE_DIR}" last)
-    info "${COLOR_WARN}Backup dir:${COLOR_RESET}    ${MIXTAPE_DIR}"
-    info "${COLOR_WARN}Input index:${COLOR_RESET}   ${INDEX:----}"
+    local INDEX=$1 FILELIST UNSORTED SORTED
     if [[ -e "${INDEX}" ]] ; then
         FILELIST=$(tmpfile_create src-filelist.txt)
         UNSORTED=$(tmpfile_create src-store-unsorted.txt)
@@ -199,8 +198,8 @@ create_index() {
 
 # Program start
 main() {
-    local ARG DATETIME SOURCE_FILES LOCATIONS
-    checkopts --
+    local ARG INDEX DATETIME SOURCE_FILES LOCATIONS
+    checkopts --store-all --store-modified
     if [[ ${#ARGS[@]} -gt 0 ]] ; then
         for ARG in "${ARGS[@]}" ; do
             config_add "${ARG}"
@@ -213,10 +212,16 @@ main() {
         done < /etc/mixtape-backup.conf
     fi
     [[ -f "${MIXTAPE_DIR}/config" ]] || usage "no backup files selected"
+    INDEX=$(index_files "${MIXTAPE_DIR}" last)
     DATETIME=$(index_datetime now file)
     SOURCE_FILES=$(tmpfile_create src-files.txt)
     LOCATIONS=$(tmpfile_create store-unsorted.txt)
-    source_files > "${SOURCE_FILES}"
+    if parseopt --store-all ; then
+        INDEX=""
+    fi
+    info "${COLOR_WARN}Backup dir:${COLOR_RESET}    ${MIXTAPE_DIR}"
+    info "${COLOR_WARN}Input index:${COLOR_RESET}   ${INDEX:----}"
+    source_files "${INDEX}" > "${SOURCE_FILES}"
     store_files "${DATETIME}" "${SOURCE_FILES}" > "${LOCATIONS}"
     create_index "${DATETIME}" "${SOURCE_FILES}" "${LOCATIONS}"
 }
