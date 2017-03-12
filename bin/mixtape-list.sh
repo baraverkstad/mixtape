@@ -39,17 +39,18 @@ index_info() {
 # Reads index entries from stdin and prints them
 index_content_print() {
     local FORMAT=${1:-short} COUNT=0 SIZE EXTRA
-    local ACCESS DATETIME SIZEKB FILE LOCATION
-    while IFS=$'\t' read -r _ ACCESS _ _ DATETIME SIZEKB FILE _ LOCATION ; do
+    local ACCESS DATETIME SIZEKB FILE SHA LOCATION
+    while IFS=$'\t' read -r _ ACCESS _ _ DATETIME SIZEKB FILE SHA LOCATION ; do
         SIZE=""
         EXTRA=""
         if [[ ${ACCESS:0:1} == "-" ]] ; then
             SIZE=$(file_size_human "${SIZEKB}")
         elif [[ ${ACCESS:0:1} == "l" ]] ; then
+            SHA=""
             EXTRA=" -> ${LOCATION}"
         fi
         if [[ ${FORMAT} == "long" ]] ; then
-            printf "%s  %s  %6s  %s%s\n" "${ACCESS}" "${DATETIME}" "${SIZE}" "${FILE}" "${EXTRA}"
+            printf "%s  %s  %6s  %15.15s  %s\n" "${ACCESS}" "${DATETIME}" "${SIZE}" "${SHA}" "${FILE}${EXTRA}"
         else
             printf "%s\n" "${FILE}"
         fi
