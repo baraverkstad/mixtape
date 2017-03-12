@@ -192,12 +192,6 @@ main() {
         for ARG in "${ARGS[@]}" ; do
             config_add "${ARG}"
         done
-    elif [[ ! -f "${MIXTAPE_DIR}/config" && -f /etc/mixtape-backup.conf ]] ; then
-        # TODO: Remove this legacy config copying
-        while IFS= read -r LINE ; do
-            [[ "${LINE}" != "" && "${LINE:0:1}" != "#" ]] || continue
-            config_add "${LINE}"
-        done < /etc/mixtape-backup.conf
     fi
     [[ -f "${MIXTAPE_DIR}/config" ]] || usage "no backup files selected"
     INDEX=$(index_files "${MIXTAPE_DIR}" last)
