@@ -178,16 +178,16 @@ test_file_sha256() {
 
 # Tests the tmpfile_create and tmpfile_cleanup functions
 test_tmpfile_create() {
-    local FILE
-    assert_raises "[[ -d ${TMP_DIR} ]]" 1
+    local DIR="/tmp/mixtape-$$" FILE
+    assert_raises "[[ -d ${DIR} ]]" 1
     FILE=$(tmpfile_create)
-    assert_raises "[[ -d ${TMP_DIR} ]]" 0
+    assert_raises "[[ -d ${DIR} ]]" 0
     assert_raises "[[ -f ${FILE} ]]" 0
-    assert_raises "[[ ${FILE} == ${TMP_DIR}/file.tmp.???? ]]" 0
+    assert_raises "[[ ${FILE} == ${DIR}/file.tmp.???? ]]" 0
     FILE=$(tmpfile_create test.bin)
-    assert_raises "[[ ${FILE} == ${TMP_DIR}/test.bin.???? ]]" 0
+    assert_raises "[[ ${FILE} == ${DIR}/test.bin.???? ]]" 0
     assert_raises "tmpfile_cleanup" 0
-    assert_raises "[[ -d ${TMP_DIR} ]]" 1
+    assert_raises "[[ -d ${DIR} ]]" 1
 }
 
 # Tests the largefile_search_sha function

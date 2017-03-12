@@ -26,7 +26,6 @@ DEFAULT_BACKUP_DIR=/backup
 DEFAULT_MIXTAPE_DIR=${DEFAULT_BACKUP_DIR}/$(hostname)/mixtape
 BACKUP_DIR=${DEFAULT_BACKUP_DIR}
 MIXTAPE_DIR=${DEFAULT_MIXTAPE_DIR}
-TMP_DIR=/tmp/mixtape-$$
 
 # Color variables
 if [[ -t 0 ]]; then
@@ -380,19 +379,20 @@ file_sha256() {
     echo -n "${ARR[0]:-}"
 }
 
-# Creates a unique empty file in TMP_DIR
+# Creates a unique empty file in a temporary directory
 tmpfile_create() {
-    local NAME=${1:-file.tmp}
-    if [[ ! -d ${TMP_DIR} ]] ; then
-        mkdir -p ${TMP_DIR}
+    local NAME=${1:-file.tmp} DIR="/tmp/mixtape-$$"
+    if [[ ! -d ${DIR} ]] ; then
+        mkdir -p ${DIR}
     fi
-    mktemp "${TMP_DIR}/${NAME}.XXXX"
+    mktemp "${DIR}/${NAME}.XXXX"
 }
 
-# Removes all files in TMP_DIR (and directory itself)
+# Removes the previously created temporary directory
 tmpfile_cleanup() {
-    if [[ -d ${TMP_DIR} ]] ; then
-        rm -rf ${TMP_DIR}
+    local DIR="/tmp/mixtape-$$"
+    if [[ -d ${DIR} ]] ; then
+        rm -rf ${DIR}
     fi
 }
 
