@@ -30,7 +30,7 @@ source "${LIBRARY}" || exit 1
 # Prints index information
 index_info() {
     local FILE="$1"
-    echo -n "${COLOR_WARN}$(index_epoch "${FILE}")${COLOR_RESET}: ${FILE}"
+    echo -n "${COLOR_WARN}$(index_epoch "${FILE}")${COLOR_RESET} ${FILE}"
     xzcat "${FILE}" | wc -l | awk '{printf " (%s entries, ",$1}'
     file_size_human "${FILE}"
     printf ")\n"
