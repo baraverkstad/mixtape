@@ -32,14 +32,15 @@ source "${LIBRARY}" || exit 1
 
 # Reads sorted index entries from stdin and prints them (grouped by file)
 index_print() {
-    local CURRENT="" CURRENT_SHA EXTRA
+    local CURRENT="" CURRENT_SHA EXTRA COLOR_FILE
     local INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION
+    COLOR_FILE=$(tput setaf 6)
     while IFS=$'\t' read -r INDEX ACCESS USER GROUP DATETIME SIZEKB FILE SHA LOCATION ; do
         if [[ "${CURRENT}" != "${FILE}" ]] ; then
             [[ -z ${CURRENT} ]] || echo
             CURRENT=${FILE}
             CURRENT_SHA=$(file_sha256 "${FILE}")
-            echo -n "${COLOR_WARN}${FILE}"
+            echo -n "${COLOR_FILE}${FILE}"
             if [[ ! -e "${FILE}" ]] ; then
                 echo -n " ${COLOR_ERR}[deleted]"
             elif [[ ${ACCESS:0:1} == "-" && "${CURRENT_SHA}" != "${SHA}" ]] ; then
@@ -54,7 +55,7 @@ index_print() {
         else
             EXTRA="$(file_size_human "${SIZEKB}")  ${SHA}"
         fi
-        printf "%s: %s  %s %s  %s  %s\n" "${INDEX}" "${ACCESS}" "${USER}" "${GROUP}" "${DATETIME}" "${EXTRA}"
+        printf "%s %s  %s %s  %s  %s\n" "${COLOR_WARN}${INDEX}${COLOR_RESET}" "${ACCESS}" "${USER}" "${GROUP}" "${DATETIME}" "${EXTRA}"
     done
 }
 
