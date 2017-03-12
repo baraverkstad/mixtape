@@ -17,6 +17,8 @@ character.
 
 | Options               | Description                                               |
 | --------------------- | --------------------------------------------------------- |
+| `--store-all`         | Stores copies of all files, duplicating file data         |
+| `--store-modified`    | Stores copies of modified or new files (default)          |
 | `--debug`             | Enables more output (verbose mode)                        |
 | `--quiet`             | Disables normal output (quiet mode)                       |
 | `--backup-dir=<dir>`  | Sets the root backup dir, instead of `/backup`            |
