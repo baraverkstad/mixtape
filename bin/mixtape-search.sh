@@ -53,6 +53,7 @@ index_print() {
         elif [[ ${SHA} = "->" ]] ; then
             EXTRA="-> ${LOCATION}"
         else
+            SHA=$(printf "%15.15s" "${SHA}")
             EXTRA="$(file_size_human "${SIZEKB}")  ${SHA}"
         fi
         printf "%s %s  %s %s  %s  %s\n" "${COLOR_WARN}${INDEX}${COLOR_RESET}" "${ACCESS}" "${USER}" "${GROUP}" "${DATETIME}" "${EXTRA}"
