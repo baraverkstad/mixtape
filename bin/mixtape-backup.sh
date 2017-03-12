@@ -96,18 +96,6 @@ source_index_locations() {
     awk -F $'\t' '{print $7 "  " $6}' < "${CONTENT}" > "${SHASUMS}"
     (sha256sum --check "${SHASUMS}" | grep 'OK$' | cut -d ':' -f 1) > "${VERIFIED}" 2> /dev/null || true
     join -t $'\t' -1 6 -2 1 -o $'1.6\t1.7\t1.8' "${CONTENT}" "${VERIFIED}"
-    # TODO: Remove legacy sha1 -> sha256 conversion
-    (sha1sum --check "${SHASUMS}" | grep 'OK$' | cut -d ':' -f 1) > "${VERIFIED}" 2> /dev/null || true
-    if [[ -s "${VERIFIED}" ]] ; then
-        debug "converting index from SHA1 to SHA256"
-        SHASUMS=$(tmpfile_create src-sha256-sums.txt)
-        xargs -L 100 sha256sum < "${VERIFIED}" > "${SHASUMS}"
-        VERIFIED=$(tmpfile_create src-sha256-store.txt)
-        while read -r SHA FILE ; do
-            printf "%s\t%s\n" "${FILE}" "${SHA}"
-        done < "${SHASUMS}" > "${VERIFIED}"
-        join -t $'\t' -1 6 -2 1 -o $'1.6\t2.2\t1.8' "${CONTENT}" "${VERIFIED}"
-    fi
 }
 
 # Prints an index-like list of all source files to backup
