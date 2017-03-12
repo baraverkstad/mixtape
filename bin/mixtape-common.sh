@@ -13,7 +13,7 @@ set -o pipefail
 PROGRAM=$0
 PROGRAM_NAME=$(basename "${PROGRAM}" .sh)
 PROGRAM_ID="${PROGRAM_NAME}[$$]"
-VERSION=0.7
+VERSION=0.8
 
 # Command-line parsing result variables
 ARGS=()
