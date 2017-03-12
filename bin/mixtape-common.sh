@@ -110,12 +110,10 @@ parseargs() {
         --debug)
             DEBUG=true
             QUIET=false
-            break
             ;;
         --quiet)
             DEBUG=false
             QUIET=true
-            break
             ;;
         --backup-dir=*)
             BACKUP_DIR=$(realpath "${1#*=}" 2>/dev/null)
