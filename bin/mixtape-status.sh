@@ -133,7 +133,7 @@ print_index_status() {
 # Program start
 main() {
     local INDEX_FILE FIRST=true
-    checkopts
+    checkopts --
     [[ ${#ARGS[@]} -le 1 ]] || usage "too many arguments"
     if [[ ${#ARGS[@]} -eq 1 ]] ; then
         for INDEX_FILE in $(index_files "${MIXTAPE_DIR}" "${ARGS[0]}") ; do

@@ -192,7 +192,7 @@ create_index() {
 # Program start
 main() {
     local ARG DATETIME SOURCE_FILES LOCATIONS
-    checkopts
+    checkopts --
     if [[ ${#ARGS[@]} -gt 0 ]] ; then
         for ARG in "${ARGS[@]}" ; do
             config_add "${ARG}"

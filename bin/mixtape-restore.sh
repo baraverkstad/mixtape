@@ -63,7 +63,7 @@ restore_meta() {
 # Program start
 main() {
     local INDEX FILEGLOB ARR INDEX_FILE DIR
-    checkopts
+    checkopts --
     [[ ${#ARGS[@]} -eq 2 ]] || usage "incorrect number of arguments"
     INDEX="${ARGS[0]}"
     FILEGLOB="${ARGS[1]}"
