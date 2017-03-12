@@ -17,6 +17,12 @@
 #   --keep-weekly=#   Number of weekly indexes to keep, defaults to 10
 #   --keep-daily=#    Number of daily indexes to keep, defaults to 14
 #   --keep-latest=#   Number of recent indexes to keep, defaults to 5
+#   --debug           Enables more output (verbose mode)
+#   --quiet           Disables normal output (quiet mode)
+#   --backup-dir=...  Use other root backup dir, instead of /backup
+#   --mixtape-dir=... Use other mixtape dir, instead of /backup/<host>/mixtape
+#   --help            Prints help information (and quits)
+#   --version         Prints version information (and quits)
 #
 
 # Import common functions

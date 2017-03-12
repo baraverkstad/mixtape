@@ -5,10 +5,18 @@
 # Syntax: mixtape-backup [<path> ...]
 #
 # Arguments:
-#   <path>           A file or directory to backup (recursively). Required
-#                    for the first backup. Subsequent runs will reuse the same
-#                    paths as the first. Specific file names or subdirs may be
-#                    excluded by prefixing with a '-' char.
+#   <path>            A file or directory to backup (recursively). Required
+#                     for the first backup. Subsequent runs will reuse the same
+#                     paths as the first. Specific file names or subdirs may be
+#                     excluded by prefixing with a '-' char.
+#
+# Options:
+#   --debug           Enables more output (verbose mode)
+#   --quiet           Disables normal output (quiet mode)
+#   --backup-dir=...  Use other root backup dir, instead of /backup
+#   --mixtape-dir=... Use other mixtape dir, instead of /backup/<host>/mixtape
+#   --help            Prints help information (and quits)
+#   --version         Prints version information (and quits)
 #
 
 # Import common functions

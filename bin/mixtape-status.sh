@@ -5,9 +5,15 @@
 # Syntax: mixtape-status [<index>]
 #
 # Arguments:
-#   <index>          The optional index id (e.g. "@586efbc4"), named search
-#                    (e.g. "first", "last") or partial timestamp (e.g.
-#                    "2017-01") with optional glob matching (e.g. "20??-*-01").
+#   <index>           The optional index id (e.g. "@586efbc4"), named search
+#                     (e.g. "first", "last") or partial timestamp (e.g.
+#                     "2017-01") with optional glob matching (e.g. "20??-*-01").
+#
+# Options:
+#   --backup-dir=...  Use other root backup dir, instead of /backup
+#   --mixtape-dir=... Use other mixtape dir, instead of /backup/<host>/mixtape
+#   --help            Prints help information (and quits)
+#   --version         Prints version information (and quits)
 #
 
 # Import common functions

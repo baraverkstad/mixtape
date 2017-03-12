@@ -5,17 +5,21 @@
 # Syntax: mixtape-list [--long] [<index>] [<path>]
 #
 # Arguments:
-#   <index>          The optional index id (e.g. "@586efbc4"), named search
-#                    (e.g. "all", "first", "last") or partial timestamp (e.g.
-#                    "2017-01") with optional glob matching (e.g. "20??-*-01").
-#                    If no file path is specified, "all" is assumed. Otherwise
-#                    "last" is used.
-#   <path>           The optional file path for listing index content. Use "/"
-#                    to show all files. An initial "/" char will be added if
-#                    missing.
+#   <index>           The optional index id (e.g. "@586efbc4"), named search
+#                     (e.g. "all", "first", "last") or partial timestamp (e.g.
+#                     "2017-01") with optional glob matching (e.g. "20??-*-01").
+#                     If no file path is specified, "all" is assumed. Otherwise
+#                     "last" is used.
+#   <path>            The optional file path for listing index content. Use "/"
+#                     to show all files. An initial "/" char will be added if
+#                     missing.
 #
 # Options:
-#   --long           Prints content files in a longer format
+#   --long            Prints content files in a longer format
+#   --backup-dir=...  Use other root backup dir, instead of /backup
+#   --mixtape-dir=... Use other mixtape dir, instead of /backup/<host>/mixtape
+#   --help            Prints help information (and quits)
+#   --version         Prints version information (and quits)
 #
 
 # Import common functions

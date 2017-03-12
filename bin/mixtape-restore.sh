@@ -5,11 +5,11 @@
 # Syntax: mixtape-restore <index> <path>
 #
 # Arguments:
-#   <index>          The index id (e.g. "@586efbc4"), named search (e.g.
-#                    "first", "last") or unique timestamp (e.g. "2017-01-01")
-#   <path>           The absolute file path for files to restore (e.g. "/etc")
-#                    Use "/" to restore all files. An initial "/" char will be
-#                    added if missing.
+#   <index>           The index id (e.g. "@586efbc4"), named search (e.g.
+#                     "first", "last") or unique timestamp (e.g. "2017-01-01")
+#   <path>            The absolute file path for files to restore (e.g. "/etc")
+#                     Use "/" to restore all files. An initial "/" char will be
+#                     added if missing.
 #
 # Options:
 #   --debug           Enables more output (verbose mode)
