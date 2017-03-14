@@ -7,13 +7,13 @@ Searches for matching files in the backup.
 
     mixtape-search [<index>] <file>
 
-Searches the backups for all files matching the `<file>` name or path. The
+Searches the backups for all files matching the `<file>` pattern. The
 search can be limited to one or more `<index>` files, either with and index
-id (e.g. `@586efbc4`"), a named search (e.g. `all`, `first`, `last`) or a
+id (e.g. `@586efbc4`), a named search (e.g. `all`, `first`, `last`) or a
 partial timestamp (e.g. `2017-01`) with optional glob matching (e.g.
 `20??-*-01`). If no `<index>` is specified, `all` is assumed.
 
-The `<file>` name or path supports glob matching (e.g. `/etc/**/*.sh`).
+The `<file>` pattern supports glob matching (e.g. `/etc/**/*.sh`).
 Avoid shell expansion of the pattern by using quotes (i.e. `"pattern"`). A
 pattern starting with `/` will match an absolute file path.
 
