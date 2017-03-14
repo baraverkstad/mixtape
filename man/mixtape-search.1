@@ -1,0 +1,67 @@
+.TH "mixtape-search" "1" "Mixtape Backup" "" "Mixtape Backup"
+.\" -----------------------------------------------------------------
+.\" * disable hyphenation
+.nh
+.\" * disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.SH "NAME"
+mixtape-search -- searches for matching files
+.SH "SYNOPSIS"
+.sp
+.nf
+\fBmixtape-search\fR [\fIindex\fR] \fIfile\fR
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Searches the backups for all files matching the \fIfile\fR pattern. The search
+can be limited to one or more \fIindex\fR files, either with and index id
+(e.g. \fB@586efbc4\fR), a named search (e.g. \fBall\fR, \fBfirst\fR, \fBlast\fR)
+or a partial timestamp (e.g. \fB2017-01\fR) with optional glob matching
+(e.g. \fB20??-*-01\fR). If no \fIindex\fR is specified, \fBall\fR is assumed.
+.sp
+The \fIfile\fR pattern supports glob matching (e.g. \fB/etc/**/*.sh\fR).
+Avoid shell expansion of the pattern by using quotes (i.e. \fB"pattern"\fR).
+A pattern starting with \fB/\fR will match an absolute file path.
+.sp
+By default, the oldest copy of each file version (a unique \fBsha256sum\fR)
+is printed. Use \fB--all\fR to show all copies.
+.sp
+.SH "OPTIONS"
+.sp
+--\fBall\fR   Prints all file versions matched.
+
+--\fBnewest\fR
+.RS 8
+Prints the newest file versions matched.
+.RE
+
+--\fBoldest\fR
+.RS 8
+Prints the oldest file versions matched (default).
+.RE
+
+--\fBbackup-dir\fR=\fIDIR\fR
+.RS 8
+Sets the root backup dir, instead of \fB/backup\fR.
+.RE
+
+--\fBmixtape-dir\fR=\fIDIR\fR
+.RS 8
+Sets the mixtape dir, instead of \fB/backup/\fR${HOSTNAME}\fB/mixtape\fR.
+.RE
+
+--\fBhelp\fR  Prints help information (and quits).
+
+--\fBversion\fR
+.RS 8
+Prints version information (and quits).
+.RE
+
+.sp
+.SH "SEE ALSO"
+.sp
+\fBmixtape-list\fR
+.sp
+https://baraverkstad.github.io/mixtape/

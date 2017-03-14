@@ -1,0 +1,46 @@
+.TH "mixtape-status" "1" "Mixtape Backup" "" "Mixtape Backup"
+.\" -----------------------------------------------------------------
+.\" * disable hyphenation
+.nh
+.\" * disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.SH "NAME"
+mixtape-status -- prints a backup status summary
+.SH "SYNOPSIS"
+.sp
+.nf
+\fBmixtape-status\fR [\fIindex\fR]
+.fi
+.sp
+.SH "DESCRIPTION"
+.sp
+Prints a backup status summary or a summary for a specified \fIindex\fR.
+.sp
+The \fIindex\fR can be specified as an index id (e.g. \fB@586efbc4\fR),
+a named search (e.g. \fBfirst\fR, \fBlast\fR) or partial timestamp
+(e.g. \fB2017-01\fR) with optional glob matching (e.g. \fB20??-*-01\fR).
+.sp
+.SH "OPTIONS"
+.sp
+--\fBbackup-dir\fR=\fIDIR\fR
+.RS 8
+Sets the root backup dir, instead of \fB/backup\fR.
+.RE
+
+--\fBmixtape-dir\fR=\fIDIR\fR
+.RS 8
+Sets the mixtape dir, instead of \fB/backup/\fR${HOSTNAME}\fB/mixtape\fR.
+.RE
+
+--\fBhelp\fR  Prints help information (and quits).
+
+--\fBversion\fR
+.RS 8
+Prints version information (and quits).
+.RE
+
+.sp
+.SH "SEE ALSO"
+.sp
+https://baraverkstad.github.io/mixtape/
