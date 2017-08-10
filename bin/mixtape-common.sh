@@ -89,6 +89,20 @@ versioninfo() {
     exit 1
 }
 
+# Checks if a command exists and allows specified options and arguments
+cmdtest() {
+    local ARG1=$1 ARGS=($*)
+    local CMD=$(which "${ARG1}")
+    local CMDLINE="${CMD} ${ARGS[@]:1}"
+    if [[ -z "${CMD}" ]] ; then
+        return 1
+    elif ! ${CMDLINE} < /dev/null > /dev/null 2>&1 ; then
+        return 1
+    else
+        echo -n ${CMDLINE}
+    fi
+}
+
 # Prints a string without leading and trailing whitespace
 trim() {
     local STR="$*"
