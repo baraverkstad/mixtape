@@ -2,7 +2,7 @@
 #
 # Lists indices in the backup, and optionally their content files.
 #
-# Syntax: mixtape-list [--long] [<index>] [<path>]
+# Syntax: mixtape-list [<index>] [<path>]
 #
 # Arguments:
 #   <index>           The optional index id (e.g. "@586efbc4"), named search
@@ -15,7 +15,9 @@
 #                     missing.
 #
 # Options:
-#   --long            Prints content files in a longer format
+#   --short           Prints output in shorter format
+#   --long            Prints output in longer format (default)
+#   --system          Prints output in machine-readable system format
 #   --backup-dir=...  Use other root backup dir, instead of /backup
 #   --mixtape-dir=... Use other mixtape dir, instead of /backup/<host>/mixtape
 #   --help            Prints help information (and quits)
@@ -29,17 +31,28 @@ source "${LIBRARY}" || exit 1
 
 # Prints index information
 index_info() {
-    local FILE="$1"
-    echo -n "${COLOR_WARN}$(index_epoch "${FILE}")${COLOR_RESET} ${FILE}"
-    xzcat "${FILE}" | wc -l | awk '{printf " (%s entries, ",$1}'
-    file_size_human "${FILE}"
-    printf ")\n"
+    local FILE="$1" FORMAT="${2}" INDEX
+    INDEX=$(index_epoch "${FILE}")
+    if [[ ${FORMAT} == "system" ]] ; then
+        printf "%s\t===\t%s\n" "${INDEX}" "${FILE}"
+    elif [[ ${FORMAT} == "short" ]] ; then
+        echo "${COLOR_WARN}$(index_epoch "${FILE}")${COLOR_RESET} ${FILE}"
+    else
+        echo -n "${COLOR_WARN}$(index_epoch "${FILE}")${COLOR_RESET} ${FILE}"
+        xzcat "${FILE}" | wc -l | awk '{printf " (%s entries, ",$1}'
+        file_size_human "${FILE}"
+        printf ")\n"
+    fi
 }
 
 # Reads index entries from stdin and prints them
 index_content_print() {
-    local FORMAT=${1:-short} COUNT=0 SIZE EXTRA
+    local FORMAT="${1}" COUNT=0 SIZE EXTRA COLOR_FILE
+    COLOR_FILE=$(tput setaf 6)
     local ACCESS DATETIME SIZEKB FILE SHA LOCATION
+    if [[ ${FORMAT} == "system" ]] ; then
+        exec cat
+    fi
     while IFS=$'\t' read -r _ ACCESS _ _ DATETIME SIZEKB FILE SHA LOCATION ; do
         SIZE=""
         EXTRA=""
@@ -49,10 +62,10 @@ index_content_print() {
             SHA=""
             EXTRA=" -> ${LOCATION}"
         fi
-        if [[ ${FORMAT} == "long" ]] ; then
-            printf "%s  %s  %6s  %15.15s  %s\n" "${ACCESS}" "${DATETIME}" "${SIZE}" "${SHA}" "${FILE}${EXTRA}"
-        else
+        if [[ ${FORMAT} == "short" ]] ; then
             printf "%s\n" "${FILE}"
+        else
+            printf "%s  %s  %6s  %15.15s  %s\n" "${ACCESS}" "${DATETIME}" "${SIZE}" "${SHA}" "${COLOR_FILE}${FILE}${COLOR_RESET}${EXTRA}"
         fi
         COUNT=$((COUNT+1))
     done
@@ -65,10 +78,12 @@ index_content_print() {
 
 # Program start
 main() {
-    local FORMAT="short" INDEX="" FILEPATH="" FIRST=true INDEX_FILE
-    checkopts --long
-    if parseopt --long ; then
-        FORMAT="long"
+    local FORMAT="long" INDEX="" FILEPATH="" FIRST=true INDEX_FILE
+    checkopts --short --long --system
+    if parseopt --short ; then
+        FORMAT="short"
+    elif parseopt --system ; then
+        FORMAT="system"
     fi
     [[ ${#ARGS[@]} -le 2 ]] || usage "too many arguments"
     if [[ ${#ARGS[@]} -eq 1 && ${ARGS[0]:0:1} == "/" ]] ; then
@@ -83,9 +98,9 @@ main() {
     fi
     for INDEX_FILE in $(index_files "${MIXTAPE_DIR}" "${INDEX}") ; do
         ${FIRST} || [[ -z "${FILEPATH}" ]] || echo
-        index_info "${INDEX_FILE}"
+        index_info "${INDEX_FILE}" "${FORMAT}"
         if [[ -n "${FILEPATH}" ]] ; then
-            index_content "${MIXTAPE_DIR}" "${INDEX_FILE}" "${FILEPATH}" | index_content_print ${FORMAT}
+            index_content "${MIXTAPE_DIR}" "${INDEX_FILE}" "${FILEPATH}" | index_content_print "${FORMAT}"
         fi
         FIRST=false
     done

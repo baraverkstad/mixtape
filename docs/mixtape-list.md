@@ -21,7 +21,9 @@ show all files. The `<path>` must be an absolute file path, and an initial
 
 | Options               | Description                                               |
 | --------------------- | --------------------------------------------------------- |
-| `--long`              | Prints content files in long format                       |
+| `--short`             | Prints output in shorter format                           |
+| `--long`              | Prints output in longer format (default)                  |
+| `--system`            | Prints output in machine-readable system format           |
 | `--backup-dir=<dir>`  | Sets the root backup dir, instead of `/backup`            |
 | `--mixtape-dir=<dir>` | Sets the mixtape dir, instead of `/backup/<host>/mixtape` |
 | `--help`              | Prints help information (and quits)                       |
