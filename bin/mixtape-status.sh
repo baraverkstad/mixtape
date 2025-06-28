@@ -89,7 +89,7 @@ print_mixtape_status() {
 print_disk_usage() {
     local DIR=$1
     echo "${COLOR_WARN}--- Disk Usage: ---${COLOR_RESET}"
-    du -h --max-depth=1 --time "${DIR}"
+    du -h --max-depth=1 --time "${DIR}/"
     echo
     df -h "${DIR}"
 }
